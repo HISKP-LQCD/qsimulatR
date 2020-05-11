@@ -1,0 +1,15 @@
+Package: qsimulatR
+Version: 0.1
+Date: 2020-05-05
+Title: A quantum computer simulator
+Authors@R: 
+    c(person(given = "Carsten",
+             family = "Urbach",
+             role = c("aut", "cre"),
+             email = "urbach@hiskp.uni-bonn.de"))
+Description: A quantum computer simulator framework.
+LazyData: true
+Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
+RoxygenNote: 7.1.0
+Encoding: UTF-8
+VignetteBuilder: knitr
