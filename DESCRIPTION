@@ -1,7 +1,7 @@
 Package: qsimulatR
 Version: 0.1
 Date: 2020-05-05
-Title: A quantum computer simulator
+Title: A quantum computer simulator in R
 Authors@R: 
     c(person(given = "Carsten",
              family = "Urbach",
