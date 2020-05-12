@@ -34,10 +34,16 @@ eps <- 1.e-12
 #' @rdname qstate
 #' @aliases qstate-class
 #' @exportClass qstate
-setClass("qstate", representation(nbits="integer",
-                                  coefs="complex"),
+setClass("qstate",
+         representation(nbits="integer",
+                        coefs="complex"),
          prototype(nbits=1L, coefs=c(1. + 0*1i, 0*1i)),
          validity=check_qstate)
+
+## "constructor" function
+qstate <- function(nbits=1L, coefs=c(1+0*1i, rep(0*1i, times=2^nbits-1))) {
+  return(new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
+}
 
 setMethod("show", signature(object = "qstate"),
           function(object) {
@@ -59,3 +65,25 @@ setMethod("*", c("matrix", "qstate"),
             return(e2)
           }
           )
+
+setClass("qgate",
+         representation(bits="integer"),
+         prototype(bits=c(1L)))
+
+#' @export
+applygate <- function(bit=1L, qstate) {
+  stopifnot(bit > 0 && bit <= qstate@nbits)
+  nbits <- qstate@nbits
+  N  <- 2^nbits
+  mcf <- array(c(1,1,1,-1), dim=c(2,2))/sqrt(2)
+  ii <- seq(0, 2^bit-1, by=2^(bit-1))
+  res <- c()
+  for(i in c(0:(N/2-1))) {
+    for(j in c(0,1)) {
+      res[j*2^(bit-1) + i*2^(nbits-bit) + 1] <-  sum(mcf[j+1,]*qstate@coefs[ii + i*2^(nbits-bit) + 1])
+    }
+  }
+  cat(res, "\n")
+  return(qstate(nbits=nbits, coefs=as.complex(res)))
+}
+
