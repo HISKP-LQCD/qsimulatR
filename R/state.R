@@ -41,6 +41,7 @@ setClass("qstate",
          validity=check_qstate)
 
 ## "constructor" function
+#' @export
 qstate <- function(nbits=1L, coefs=c(1+0i, rep(0i, times=2^nbits-1))) {
   return(new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
 }
@@ -58,6 +59,7 @@ setMethod("show", signature(object = "qstate"),
           }
           )
 
+
 setMethod("*", c("matrix", "qstate"),
           function(e1, e2) {
             e2@coefs = drop(e1 %*% e2@coefs)
@@ -66,11 +68,29 @@ setMethod("*", c("matrix", "qstate"),
           }
           )
 
+#' A single qubit gate
+#'
+#' This class represents a generic single qubit gate
+#'
+#' @slot bit Integer. The single bit to act on.
+#' @slot M complex valued array. The 2x2 matrix representing the
+#' gate
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#' H <- sqgate(bit=1, M=array(c(1,1,1,-1), dim=c(2,2))/sqrt(2))
+#' z <- H * x
+#' 
+#' @name sqgate
+#' @rdname sqgate
+#' @aliases sqgate-class
+#' @exportClass sqgate
 setClass("sqgate",
          representation(bit="integer",
                         M="array"),
          prototype(bit=c(1L), M=array(as.complex(c(1,0,0,1)), dim=c(2,2))))
 
+#' @export
 sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2))) {
   return(new("sqgate", bit=as.integer(bit), M=M))
 }
@@ -98,12 +118,28 @@ setMethod("*", c("sqgate", "qstate"),
           }
           )
 
-
-## first bit is control bit
+#' The CNOT gate
+#'
+#' This class represents a generic CNOT gate
+#'
+#' @slot bits Integer vector of length 2. First bit is the control bit,
+#'            second the target bit.
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#' H <- sqgate(bit=1, M=array(c(1,1,1,-1), dim=c(2,2))/sqrt(2))
+#' CNOT <- cnotgate(c(1,2))
+#' z <- CNOT * (H * x)
+#' 
+#' @name cnotgate
+#' @rdname cnotgate
+#' @aliases cnotgate-class
+#' @exportClass cnotgate
 setClass("cnotgate",
          representation(bits="integer"),
          prototype(bits=c(1L,2L)))
 
+#' @export
 cnotgate <- function(bits=c(1, 2)) return(new("cnotgate", bits=as.integer(bits)))
                         
 setMethod("*", c("cnotgate", "qstate"),
