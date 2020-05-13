@@ -37,11 +37,11 @@ eps <- 1.e-12
 setClass("qstate",
          representation(nbits="integer",
                         coefs="complex"),
-         prototype(nbits=1L, coefs=c(1. + 0*1i, 0*1i)),
+         prototype(nbits=1L, coefs=c(1. + 0i, 0i)),
          validity=check_qstate)
 
 ## "constructor" function
-qstate <- function(nbits=1L, coefs=c(1+0*1i, rep(0*1i, times=2^nbits-1))) {
+qstate <- function(nbits=1L, coefs=c(1+0i, rep(0i, times=2^nbits-1))) {
   return(new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
 }
 
@@ -66,24 +66,58 @@ setMethod("*", c("matrix", "qstate"),
           }
           )
 
-setClass("qgate",
-         representation(bits="integer"),
-         prototype(bits=c(1L)))
+setClass("sqgate",
+         representation(bit="integer",
+                        M="array"),
+         prototype(bit=c(1L), M=array(as.complex(c(1,0,0,1)), dim=c(2,2))))
+
+sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2))) {
+  return(new("sqgate", bit=as.integer(bit), M=M))
+}
+
+setMethod("*", c("sqgate", "qstate"),
+          function(e1, e2) {
+            stopifnot(e1@bit > 0 && e1@bit <= e2@nbits)
+            bit <- e1@bit
+            nbits <- e2@nbits
+            ii <- c(0, 2^(bit-1))
+            res <- c()
+            ## outside
+            for(k in c(0:(2^(nbits-bit)-1))) {
+              ## inside
+              for(i in c(0:(2^(bit-1)-1))) {
+                ## the 2x2 matrix
+                for(j in c(0,1)) {
+                  ll <- j*2^(bit-1) + i + k*2^bit + 1
+                  rr <- ii + i + k*2^(bit) + 1
+                  res[ll] <-  sum(e1@M[j+1,]*e2@coefs[rr])
+                }
+              }
+            }
+            return(qstate(nbits=nbits, coefs=as.complex(res)))
+          }
+          )
 
 #' @export
 applygate <- function(bit=1L, qstate) {
   stopifnot(bit > 0 && bit <= qstate@nbits)
   nbits <- qstate@nbits
-  N  <- 2^nbits
   mcf <- array(c(1,1,1,-1), dim=c(2,2))/sqrt(2)
   ii <- seq(0, 2^bit-1, by=2^(bit-1))
+  ii <- c(0, 2^(bit-1))
   res <- c()
-  for(i in c(0:(N/2-1))) {
-    for(j in c(0,1)) {
-      res[j*2^(bit-1) + i*2^(nbits-bit) + 1] <-  sum(mcf[j+1,]*qstate@coefs[ii + i*2^(nbits-bit) + 1])
+  ## outside
+  for(k in c(0:(2^(nbits-bit)-1))) {
+    ## inside
+    for(i in c(0:(2^(bit-1)-1))) {
+      ## the 2x2 matrix
+      for(j in c(0,1)) {
+        ll <- j*2^(bit-1) + i + k*2^bit + 1
+        rr <- ii + i + k*2^(bit) + 1
+        res[ll] <-  sum(mcf[j+1,]*qstate@coefs[rr])
+      }
     }
   }
-  cat(res, "\n")
   return(qstate(nbits=nbits, coefs=as.complex(res)))
 }
 
