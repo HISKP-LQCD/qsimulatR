@@ -98,26 +98,29 @@ setMethod("*", c("sqgate", "qstate"),
           }
           )
 
-#' @export
-applygate <- function(bit=1L, qstate) {
-  stopifnot(bit > 0 && bit <= qstate@nbits)
-  nbits <- qstate@nbits
-  mcf <- array(c(1,1,1,-1), dim=c(2,2))/sqrt(2)
-  ii <- seq(0, 2^bit-1, by=2^(bit-1))
-  ii <- c(0, 2^(bit-1))
-  res <- c()
-  ## outside
-  for(k in c(0:(2^(nbits-bit)-1))) {
-    ## inside
-    for(i in c(0:(2^(bit-1)-1))) {
-      ## the 2x2 matrix
-      for(j in c(0,1)) {
-        ll <- j*2^(bit-1) + i + k*2^bit + 1
-        rr <- ii + i + k*2^(bit) + 1
-        res[ll] <-  sum(mcf[j+1,]*qstate@coefs[rr])
-      }
-    }
-  }
-  return(qstate(nbits=nbits, coefs=as.complex(res)))
-}
 
+## first bit is control bit
+setClass("cnotgate",
+         representation(bits="integer"),
+         prototype(bits=c(1L,2L)))
+
+cnotgate <- function(bits=c(1, 2)) return(new("cnotgate", bits=as.integer(bits)))
+                        
+setMethod("*", c("cnotgate", "qstate"),
+          function(e1, e2) {
+            stopifnot(length(e1@bits) == 2)
+            stopifnot(all(e1@bits > 0) && all(e1@bits < e2@nbits))
+            stopifnot(e1@bits[1] != e1@bits[2])
+            ## control bit == 1
+            al <- array(as.integer(c(0:(2^e2@nbits-1))), dim=c(2^e2@nbits,1))
+            cb <- apply(al, MARGIN=1, FUN=function(x, y) bitwAnd(x, as.integer(y))>0, y=2^(e1@bits[1]-1))
+            ## target bit
+            tb <- apply(al, MARGIN=1, FUN=function(x, y) bitwAnd(x, as.integer(y))>0, y=2^(e1@bits[2]-1))
+            x <- which(cb & tb)
+            y <- which(cb & !tb)
+            tmp <- e2@coefs[x]
+            e2@coefs[x] <- e2@coefs[y]
+            e2@coefs[y] <- tmp
+            return(e2)
+          }
+          )
