@@ -18,7 +18,7 @@ genStateString <- function(int, nbits) {
 }
 
 qstatecoefs <- function(y) {
-  if (is(y, 'qstate')) y@coefs
+  if (methods::is(y, 'qstate')) y@coefs
   else y
 }
 
@@ -29,7 +29,10 @@ eps <- 1.e-12
 #'
 #' @slot nbits The number of qbits
 #' @slot coefs The 2^nbits complex valued vector of coefficients
-#' 
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#'
 #' @name qstate
 #' @rdname qstate
 #' @aliases qstate-class
@@ -43,7 +46,7 @@ setClass("qstate",
 ## "constructor" function
 #' @export
 qstate <- function(nbits=1L, coefs=c(1+0i, rep(0i, times=2^nbits-1))) {
-  return(new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
+  return(methods::new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
 }
 
 setMethod("show", signature(object = "qstate"),
@@ -59,14 +62,19 @@ setMethod("show", signature(object = "qstate"),
           }
           )
 
-
 setMethod("*", c("matrix", "qstate"),
           function(e1, e2) {
             e2@coefs = drop(e1 %*% e2@coefs)
-            validObject(e2)
+            methods::validObject(e2)
             return(e2)
           }
           )
+
+check_sqgate  <- function(object) {
+  stopifnot(object@bit > 0)
+  stopifnot(length(object@bit) == 1)
+  stopifnot(all(dim(object@M) == c(2,2)))
+}
 
 #' A single qubit gate
 #'
@@ -88,13 +96,23 @@ setMethod("*", c("matrix", "qstate"),
 setClass("sqgate",
          representation(bit="integer",
                         M="array"),
-         prototype(bit=c(1L), M=array(as.complex(c(1,0,0,1)), dim=c(2,2))))
+         prototype(bit=c(1L), M=array(as.complex(c(1,0,0,1)), dim=c(2,2))),
+         validity=check_sqgate)
 
 #' @export
 sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2))) {
-  return(new("sqgate", bit=as.integer(bit), M=M))
+  return(methods::new("sqgate", bit=as.integer(bit), M=M))
 }
 
+#' times-sqgate-qstate
+#'
+#' Applies a single qubit gate to a quantum state.
+#'
+#' @slot e1 object of S4 class 'sqgate'
+#' @slot e2 object of S4 class 'qstate'
+#' @return
+#' An object of S4 class 'qstate'
+#'
 setMethod("*", c("sqgate", "qstate"),
           function(e1, e2) {
             stopifnot(e1@bit > 0 && e1@bit <= e2@nbits)
@@ -129,8 +147,9 @@ setMethod("*", c("sqgate", "qstate"),
 #' x <- qstate(nbits=2)
 #' H <- sqgate(bit=1, M=array(c(1,1,1,-1), dim=c(2,2))/sqrt(2))
 #' CNOT <- cnotgate(c(1,2))
+#' ## A Bell state
 #' z <- CNOT * (H * x)
-#' 
+#'
 #' @name cnotgate
 #' @rdname cnotgate
 #' @aliases cnotgate-class
@@ -140,23 +159,55 @@ setClass("cnotgate",
          prototype(bits=c(1L,2L)))
 
 #' @export
-cnotgate <- function(bits=c(1, 2)) return(new("cnotgate", bits=as.integer(bits)))
-                        
+cnotgate <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(bits)))
+
+is.bitset <- function(x, bit) {
+  return(bitwAnd(as.integer(x), as.integer(2^(bit-1))) > 0)
+}
+
+#' times-cnotgate-qstate
+#'
+#' Applies a CNOT gate to a quantum state.
+#'
+#' @slot e1 object of S4 class 'cnotgate'
+#' @slot e2 object of S4 class 'qstate'
+#'
+#' @aliases "*"
+#' @return
+#' An object of S4 class 'qstate'
 setMethod("*", c("cnotgate", "qstate"),
           function(e1, e2) {
             stopifnot(length(e1@bits) == 2)
-            stopifnot(all(e1@bits > 0) && all(e1@bits < e2@nbits))
+            stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
             stopifnot(e1@bits[1] != e1@bits[2])
             ## control bit == 1
             al <- array(as.integer(c(0:(2^e2@nbits-1))), dim=c(2^e2@nbits,1))
-            cb <- apply(al, MARGIN=1, FUN=function(x, y) bitwAnd(x, as.integer(y))>0, y=2^(e1@bits[1]-1))
+            cb <- apply(al, MARGIN=1, FUN=is.bitset, bit=e1@bits[1])
             ## target bit
-            tb <- apply(al, MARGIN=1, FUN=function(x, y) bitwAnd(x, as.integer(y))>0, y=2^(e1@bits[2]-1))
+            tb <- apply(al, MARGIN=1, FUN=is.bitset, bit=e1@bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
             tmp <- e2@coefs[x]
             e2@coefs[x] <- e2@coefs[y]
             e2@coefs[y] <- tmp
             return(e2)
+          }
+          )
+
+#' Method measure
+#' @name measure
+#' @rdname measure-methods
+#'
+#' @param e1 object to measure
+#' @exportMethod measure
+setGeneric("measure", function(e1) attributes(object))
+
+#' @rdname measure-methods
+#' @aliases measure
+setMethod("measure", c("qstate"),
+          function(e1) {
+            prob <- Re(e1@coefs * Conj(e1@coefs))
+            e1@coefs <- as.complex(stats::rmultinom(n=1, size=1, prob=prob))
+            return(e1)
           }
           )

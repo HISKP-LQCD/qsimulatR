@@ -8,8 +8,16 @@ Authors@R:
              role = c("aut", "cre"),
              email = "urbach@hiskp.uni-bonn.de"))
 Description: A quantum computer simulator framework.
+Imports:
+    methods,
+    stats
+Suggests:
+    knitr
+License: GPL-3 + file LICENSE
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
 RoxygenNote: 7.1.0
 Encoding: UTF-8
 VignetteBuilder: knitr
+URL: https://github.com/urbach/qsimulatR
+BugReports: https://github.com/urbach/qsimulatR/issues
