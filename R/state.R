@@ -86,8 +86,7 @@ check_sqgate  <- function(object) {
 #'
 #' @examples
 #' x <- qstate(nbits=2)
-#' H <- sqgate(bit=1, M=array(c(1,1,1,-1), dim=c(2,2))/sqrt(2))
-#' z <- H * x
+#' z <- H(1) * x
 #' 
 #' @name sqgate
 #' @rdname sqgate
@@ -136,6 +135,47 @@ setMethod("*", c("sqgate", "qstate"),
           }
           )
 
+#' The Hadarmard gate
+#'
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+H <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2)))
+}
+#' The Rz gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Rz <- function(bit, theta=0.) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2))))
+}
+#' The S gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+S <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2))))
+}
+#' The T gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+T <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2))))
+}
+
 #' The CNOT gate
 #'
 #' This class represents a generic CNOT gate
@@ -145,10 +185,8 @@ setMethod("*", c("sqgate", "qstate"),
 #'
 #' @examples
 #' x <- qstate(nbits=2)
-#' H <- sqgate(bit=1, M=array(c(1,1,1,-1), dim=c(2,2))/sqrt(2))
-#' CNOT <- cnotgate(c(1,2))
 #' ## A Bell state
-#' z <- CNOT * (H * x)
+#' z <- CNOT(c(1,2)) * (H(1) * x)
 #'
 #' @name cnotgate
 #' @rdname cnotgate
@@ -160,6 +198,16 @@ setClass("cnotgate",
 
 #' @export
 cnotgate <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(bits)))
+
+#' The CNOT gate
+#'
+#' @param bits integer vector of length two, the first bit being the control and the second
+#' the target bit.
+#'
+#' @return
+#' An S4 class 'cnotgate' object is returned
+#' @export
+CNOT <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(bits)))
 
 is.bitset <- function(x, bit) {
   return(bitwAnd(as.integer(x), as.integer(2^(bit-1))) > 0)
