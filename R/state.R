@@ -1,3 +1,8 @@
+is.bitset <- function(x, bit) {
+  ## bitwAnd corrects numeric input to integer
+  return(bitwAnd(x, 2^(bit-1)) > 0)
+}
+
 check_qstate <- function(object) {
   stopifnot(object@nbits > 0)
   stopifnot(object@nbits <= 16)
@@ -7,13 +12,9 @@ check_qstate <- function(object) {
 
 genStateString <- function(int, nbits) {
   x <- intToBits(int)
-  str <- "|"
-  for(i in c(nbits:1)) {
-    bitstr <- "0"
-    if(x[i] > 0) bitstr <- "1"
-    str <- paste0(str, bitstr)
-  }
-  str <- paste0(str, ">")
+  i <- nbits:1
+  str <- paste0(ifelse(x[i] > 0, 1, 0), collapse="")
+  str <- paste0("|", str, ">")
   return(str)
 }
 
@@ -52,9 +53,9 @@ qstate <- function(nbits=1L, coefs=c(1+0i, rep(0i, times=2^nbits-1))) {
 setMethod("show", signature(object = "qstate"),
           function(object) {
             N <- 2^object@nbits
-            for(i in as.integer(c(1:2^object@nbits))) {
+            for(i in 1:N) {
               if(abs(object@coefs[i]) > eps) {
-                if(i != 1) cat("+ ")
+                if(i != 1) cat("+ ") ## only useful if 1st entry is non-zero
                 else cat("  ")
                 cat(object@coefs[i], genStateString(int=i-1L, nbits=object@nbits), "\n")
               }
@@ -71,8 +72,8 @@ setMethod("*", c("matrix", "qstate"),
           )
 
 check_sqgate  <- function(object) {
-  stopifnot(object@bit > 0)
   stopifnot(length(object@bit) == 1)
+  stopifnot(object@bit > 0)
   stopifnot(all(dim(object@M) == c(2,2)))
 }
 
@@ -119,18 +120,25 @@ setMethod("*", c("sqgate", "qstate"),
             nbits <- e2@nbits
             ii <- c(0, 2^(bit-1))
             res <- c()
-            ## outside
-            for(k in c(0:(2^(nbits-bit)-1))) {
-              ## inside
-              for(i in c(0:(2^(bit-1)-1))) {
-                ## the 2x2 matrix
-                for(j in c(0,1)) {
-                  ll <- j*2^(bit-1) + i + k*2^bit + 1
-                  rr <- ii + i + k*2^(bit) + 1
-                  res[ll] <-  sum(e1@M[j+1,]*e2@coefs[rr])
-                }
-              }
-            }
+            al <- 0:(2^e2@nbits-1)
+            ii <- sapply(al, is.bitset, bit=bit)
+            kk <- !ii
+            res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
+            res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
+
+            ## original version, significantly slower:
+            ### outside
+            #for(k in c(0:(2^(nbits-bit)-1))) {
+            #  ## inside
+            #  for(i in c(0:(2^(bit-1)-1))) {
+            #    ## the 2x2 matrix
+            #    for(j in c(0,1)) {
+            #      ll <- j*2^(bit-1) + i + k*2^bit + 1
+            #      rr <- ii + i + k*2^(bit) + 1
+            #      res[ll] <-  sum(e1@M[j+1,]*e2@coefs[rr])
+            #    }
+            #  }
+            #}
             return(qstate(nbits=nbits, coefs=as.complex(res)))
           }
           )
@@ -209,10 +217,6 @@ cnotgate <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integ
 #' @export
 CNOT <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(bits)))
 
-is.bitset <- function(x, bit) {
-  return(bitwAnd(as.integer(x), as.integer(2^(bit-1))) > 0)
-}
-
 #' times-cnotgate-qstate
 #'
 #' Applies a CNOT gate to a quantum state.
@@ -229,10 +233,10 @@ setMethod("*", c("cnotgate", "qstate"),
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
             stopifnot(e1@bits[1] != e1@bits[2])
             ## control bit == 1
-            al <- array(as.integer(c(0:(2^e2@nbits-1))), dim=c(2^e2@nbits,1))
-            cb <- apply(al, MARGIN=1, FUN=is.bitset, bit=e1@bits[1])
+            al <- 0:(2^e2@nbits-1)
+            cb <- sapply(al, is.bitset, bit=e1@bits[1])
             ## target bit
-            tb <- apply(al, MARGIN=1, FUN=is.bitset, bit=e1@bits[2])
+            tb <- sapply(al, is.bitset, bit=e1@bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
             tmp <- e2@coefs[x]
