@@ -8,14 +8,39 @@ check_qstate <- function(object) {
   stopifnot(object@nbits <= 16)
   N <- 2^object@nbits
   stopifnot(N == length(object@coefs))
+  stopifnot(N == length(object@basis))
 }
 
-genStateString <- function(int, nbits) {
+genStateString <- function(int, nbits, collapse="") {
   x <- intToBits(int)
   i <- nbits:1
-  str <- paste0(ifelse(x[i] > 0, 1, 0), collapse="")
+  str <- paste0(ifelse(x[i] > 0, 1, 0), collapse=collapse)
   str <- paste0("|", str, ">")
   return(str)
+}
+
+#' genComputationalBasis
+#'
+#' function to generate the basis strings for given number of
+#' bits
+#'
+#' @param nbits integer. The number of qbits
+#' @param collapse character. String to fill in between separate bits
+#'
+#' @return a character vector of length 2^nbits
+#' 
+#' @examples
+#' genComputationalBasis(4)
+#' genComputationalBasis(4, collapse=">|")
+#'
+#' @export
+genComputationalBasis <- function(nbits, collapse="") {
+  basis <- c()
+  N <- 2^nbits
+  for(i in 1:N) {
+    basis <- c(basis, genStateString(int=i-1L, nbits=nbits, collapse=collapse))
+  }
+  return(basis)
 }
 
 qstatecoefs <- function(y) {
@@ -30,7 +55,8 @@ eps <- 1.e-12
 #'
 #' @slot nbits The number of qbits
 #' @slot coefs The 2^nbits complex valued vector of coefficients
-#'
+#' @slot basis The basis vector
+#' 
 #' @examples
 #' x <- qstate(nbits=2)
 #'
@@ -40,14 +66,21 @@ eps <- 1.e-12
 #' @exportClass qstate
 setClass("qstate",
          representation(nbits="integer",
-                        coefs="complex"),
-         prototype(nbits=1L, coefs=c(1. + 0i, 0i)),
+                        coefs="complex",
+                        basis="character"),
+         prototype(nbits=1L,
+                   coefs=c(1. + 0i, 0i),
+                   basis=genComputationalBasis(1L)),
          validity=check_qstate)
 
 ## "constructor" function
 #' @export
-qstate <- function(nbits=1L, coefs=c(1+0i, rep(0i, times=2^nbits-1))) {
-  return(methods::new("qstate", nbits=as.integer(nbits), coefs=as.complex(coefs)))
+qstate <- function(nbits=1L,
+                   coefs=c(1+0i, rep(0i, times=2^nbits-1)),
+                   basis=genComputationalBasis(nbits=nbits)) {
+  return(methods::new("qstate", nbits=as.integer(nbits),
+                      coefs=as.complex(coefs),
+                      basis=as.character(basis)))
 }
 
 setMethod("show", signature(object = "qstate"),
@@ -57,7 +90,7 @@ setMethod("show", signature(object = "qstate"),
               if(abs(object@coefs[i]) > eps) {
                 if(i != 1) cat("+ ") ## only useful if 1st entry is non-zero
                 else cat("  ")
-                cat(object@coefs[i], genStateString(int=i-1L, nbits=object@nbits), "\n")
+                cat(object@coefs[i], object@basis[i], "\n")
               }
             }
           }
