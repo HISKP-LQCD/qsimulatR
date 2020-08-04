@@ -180,6 +180,11 @@ setMethod("*", c("sqgate", "qstate"),
 #'
 #' @param bit integer. The bit to which to apply the gate
 #'
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- H(1) * x
+#' z
+#' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
@@ -190,6 +195,11 @@ H <- function(bit) {
 #' 
 #' @param bit integer. The bit to which to apply the gate
 #'
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- Rz(1, pi/4) * x
+#' z
+#' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
@@ -200,6 +210,11 @@ Rz <- function(bit, theta=0.) {
 #' 
 #' @param bit integer. The bit to which to apply the gate
 #'
+#' @examples
+#' x <- X(1) * qstate(nbits=2)
+#' z <- S(1) * x
+#' z
+#' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
@@ -210,11 +225,46 @@ S <- function(bit) {
 #' 
 #' @param bit integer. The bit to which to apply the gate
 #'
+#' @examples
+#' x <- X(1)*qstate(nbits=2)
+#' z <- T(1) * x
+#' z
+#' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
 T <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2))))
+}
+#' The X gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- X(1) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+X <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2))))
+}
+#' The Z gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @examples
+#' x <- X(1) * qstate(nbits=2)
+#' z <- Z(1) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Z <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2))))
 }
 
 #' The CNOT gate
