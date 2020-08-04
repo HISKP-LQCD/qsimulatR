@@ -172,7 +172,7 @@ setMethod("*", c("sqgate", "qstate"),
             #    }
             #  }
             #}
-            return(qstate(nbits=nbits, coefs=as.complex(res)))
+            return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis))
           }
           )
 
@@ -334,8 +334,9 @@ setMethod("*", c("cnotgate", "qstate"),
 #' @rdname measure-methods
 #'
 #' @param e1 object to measure
+#' @param e2 bit to project on
 #' @exportMethod measure
-setGeneric("measure", function(e1) attributes(object))
+setGeneric("measure", function(e1, bit) attributes(e1))
 
 #' @rdname measure-methods
 #' @aliases measure
@@ -346,3 +347,16 @@ setMethod("measure", c("qstate"),
             return(e1)
           }
           )
+
+#' @rdname measure-methods
+#' @aliases measure
+setMethod("measure", c("qstate", "numeric"),
+          function(e1, bit) {
+            stopifnot(bit %in% c(1:e1@nbits))
+            prob <- Re(e1@coefs * Conj(e1@coefs))
+            coefs <- stats::rmultinom(n=1, size=1, prob=prob)
+            ii <- which(coefs == 1)-1
+            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis), value=floor(ii / 2^(bit-1)) %% 2))
+          }
+          )
+

@@ -1,0 +1,30 @@
+---
+title: "GEVP energy level extraction"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+#pdf_document:
+#    toc: yes
+    
+vignette: >
+  %\VignetteIndexEntry{GEVP energy level extraction}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+```
+
+```{r}
+x <- X(2) * qstate(nbits=2, basis=genComputationalBasis(2, collapse=">|"))
+x
+y <- H(2) * (H(1) * x)
+y
+z <- CNOT(c(1, 2)) * y
+z
+u <- H(1) * z
+u
+measure(u)
+```
