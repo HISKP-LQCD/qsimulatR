@@ -31,7 +31,7 @@ genStateString <- function(int, nbits, collapse="") {
 #' 
 #' @examples
 #' genComputationalBasis(4)
-#' genComputationalBasis(4, collapse=">|")
+#' genComputationalBasis(2, collapse=">|")
 #'
 #' @export
 genComputationalBasis <- function(nbits, collapse="") {
