@@ -259,19 +259,19 @@ Rz <- function(bit, theta=0.) {
 S <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2))))
 }
-#' The T gate
+#' The Tgate gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
 #'
 #' @examples
 #' x <- X(1)*qstate(nbits=2)
-#' z <- T(1) * x
+#' z <- Tgate(1) * x
 #' z
 #' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
-T <- function(bit) {
+Tgate <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2))))
 }
 #' The X gate
