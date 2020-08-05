@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette
     
 vignette: >
-  %\VignetteIndexEntry{GEVP energy level extraction}
+  %\VignetteIndexEntry{Deutsch-Sozsa Algorithm}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
