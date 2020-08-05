@@ -94,14 +94,23 @@ qstate <- function(nbits=1L,
                       basis=as.character(basis)))
 }
 
+## Convert to numeric vector if and only if all imaginary parts equal zero
+SquashIm <- function(x) {
+  if (all(Im(z <- zapsmall(x))==0)) as.numeric(z)
+  else x
+}
+
 setMethod("show", signature(object = "qstate"),
           function(object) {
             N <- 2^object@nbits
+            first <- TRUE
+            coefs <- SquashIm(object@coefs)
             for(i in 1:N) {
               if(abs(object@coefs[i]) > eps) {
-                if(i != 1) cat("+ ") ## only useful if 1st entry is non-zero
-                else cat("  ")
-                cat(object@coefs[i], object@basis[i], "\n")
+                if((i != 1) && !first) cat(" + ") ## only useful if 1st entry is non-zero
+                else cat("   ")
+                cat("(", coefs[i], ")\t*", object@basis[i], "\n")
+                first <- FALSE
               }
             }
           }
@@ -144,7 +153,9 @@ check_sqgate  <- function(object) {
 #' 
 #' @examples
 #' x <- qstate(nbits=2)
-#' z <- H(1) * x
+#' ## application of the X (NOT) gate to bit 1
+#' z <- sqgate(bit=1L, M=array(as.complex(c(0,1,1,0)), dim=c(2,2))) * x
+#' z
 #' 
 #' @name sqgate
 #' @rdname sqgate
@@ -183,22 +194,24 @@ setMethod("*", c("sqgate", "qstate"),
             res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
             res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
 
-            ## original version, significantly slower:
-            ### outside
-            #for(k in c(0:(2^(nbits-bit)-1))) {
-            #  ## inside
-            #  for(i in c(0:(2^(bit-1)-1))) {
-            #    ## the 2x2 matrix
-            #    for(j in c(0,1)) {
-            #      ll <- j*2^(bit-1) + i + k*2^bit + 1
-            #      rr <- ii + i + k*2^(bit) + 1
-            #      res[ll] <-  sum(e1@M[j+1,]*e2@coefs[rr])
-            #    }
-            #  }
-            #}
             return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis))
           }
           )
+
+## original version of the "*" above, significantly slower:
+#### outside
+##for(k in c(0:(2^(nbits-bit)-1))) {
+##  ## inside
+##  for(i in c(0:(2^(bit-1)-1))) {
+##    ## the 2x2 matrix
+##    for(j in c(0,1)) {
+##      ll <- j*2^(bit-1) + i + k*2^bit + 1
+##      rr <- ii + i + k*2^(bit) + 1
+##      res[ll] <-  sum(e1@M[j+1,]*e2@coefs[rr])
+##    }
+##  }
+##}
+
 
 #' The Hadarmard gate
 #'
