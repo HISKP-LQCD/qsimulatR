@@ -107,6 +107,15 @@ setMethod("show", signature(object = "qstate"),
           }
           )
 
+#' times-matrix-qstate
+#'
+#' Applies a single qubit gate to a quantum state.
+#'
+#' @param e1 object of S4 class 'matrix'
+#' @param e2 object of S4 class 'qstate'
+#' @return
+#' An object of S4 class 'qstate'
+#'
 setMethod("*", c("matrix", "qstate"),
           function(e1, e2) {
             e2@coefs = drop(e1 %*% e2@coefs)
@@ -156,8 +165,8 @@ sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2))) {
 #'
 #' Applies a single qubit gate to a quantum state.
 #'
-#' @slot e1 object of S4 class 'sqgate'
-#' @slot e2 object of S4 class 'qstate'
+#' @param e1 object of S4 class 'sqgate'
+#' @param e2 object of S4 class 'qstate'
 #' @return
 #' An object of S4 class 'qstate'
 #'
@@ -209,7 +218,8 @@ H <- function(bit) {
 #' The Rz gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
-#'
+#' @param theta numeric. angle
+#' 
 #' @examples
 #' x <- qstate(nbits=2)
 #' z <- Rz(1, pi/4) * x
@@ -319,8 +329,8 @@ CNOT <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(b
 #'
 #' Applies a CNOT gate to a quantum state.
 #'
-#' @slot e1 object of S4 class 'cnotgate'
-#' @slot e2 object of S4 class 'qstate'
+#' @param e1 object of S4 class 'cnotgate'
+#' @param e2 object of S4 class 'qstate'
 #'
 #' @aliases "*"
 #' @return
@@ -384,7 +394,8 @@ setMethod("measure", c("qstate"),
 #' @return
 #' \code{measure(e1, bit)} returns a list with an element `psi` the `qstate` object projected onto
 #' and an element `value` with the value of the qbit `bit`.
-#' 
+#'
+#' @importFrom stats runif
 #' @examples
 #' ## measure the separate bits
 #' x <- H(1) * (H(2) * qstate(nbits=2))
