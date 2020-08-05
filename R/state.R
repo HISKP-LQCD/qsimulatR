@@ -56,10 +56,21 @@ eps <- 1.e-12
 #' @slot nbits The number of qbits
 #' @slot coefs The 2^nbits complex valued vector of coefficients
 #' @slot basis The basis vector
+#'
+#' @details
+#' The qbits are counted from 1 to \code{nbits} starting with the least
+#' significant bit.
 #' 
 #' @examples
 #' x <- qstate(nbits=2)
+#' x
 #'
+#' x <- qstate(nbits=2, coefs=as.complex(sqrt(rep(0.25, 4))))
+#' x
+#'
+#' x <- qstate(nbits=1, coefs=as.complex(sqrt(rep(0.5, 2))), basis=c("|dead>", "|alive>"))
+#' x
+#' 
 #' @name qstate
 #' @rdname qstate
 #' @aliases qstate-class
@@ -118,6 +129,10 @@ check_sqgate  <- function(object) {
 #' @slot M complex valued array. The 2x2 matrix representing the
 #' gate
 #'
+#' @details
+#' The qbits are counted from 1 to \code{nbits} starting with the least
+#' significant bit.
+#' 
 #' @examples
 #' x <- qstate(nbits=2)
 #' z <- H(1) * x
@@ -333,13 +348,26 @@ setMethod("*", c("cnotgate", "qstate"),
 #' @name measure
 #' @rdname measure-methods
 #'
+#' @description
+#' performs a masurement on a `qstate` object.
+#' 
 #' @param e1 object to measure
-#' @param e2 bit to project on
+#' @param bit bit to project on
 #' @exportMethod measure
 setGeneric("measure", function(e1, bit) attributes(e1))
 
 #' @rdname measure-methods
 #' @aliases measure
+#'
+#' @details \code{measure(e1)} performs a projection of the total wave function (i.e. all qbits).
+#'
+#' @return
+#' \code{measure(e1)} returns a `qstate` object representing the state projected on.
+#'
+#' @examples
+#' ## project the total wave function
+#' x <- H(1) * (H(2) * qstate(nbits=2))
+#' measure(x)
 setMethod("measure", c("qstate"),
           function(e1) {
             prob <- Re(e1@coefs * Conj(e1@coefs))
@@ -350,13 +378,33 @@ setMethod("measure", c("qstate"),
 
 #' @rdname measure-methods
 #' @aliases measure
+#'
+#' @details \code{measure(e1, bit)} performs a projection/measurement of the abit `bit`.
+#'
+#' @return
+#' \code{measure(e1, bit)} returns a list with an element `psi` the `qstate` object projected onto
+#' and an element `value` with the value of the qbit `bit`.
+#' 
+#' @examples
+#' ## measure the separate bits
+#' x <- H(1) * (H(2) * qstate(nbits=2))
+#' measure(x, 1)
+#' measure(x, 2)
 setMethod("measure", c("qstate", "numeric"),
           function(e1, bit) {
             stopifnot(bit %in% c(1:e1@nbits))
             prob <- Re(e1@coefs * Conj(e1@coefs))
-            coefs <- stats::rmultinom(n=1, size=1, prob=prob)
-            ii <- which(coefs == 1)-1
-            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis), value=floor(ii / 2^(bit-1)) %% 2))
+            N <- 2^e1@nbits
+            ii <- which((floor(c(0:(N-1)) / 2^(bit-1)) %% 2) == 0)
+            is0 <- sum(prob[ii])
+            value <- 0
+            coefs <- e1@coefs
+            if(runif(1) < is0) coefs[-ii] <- 0i
+            else {
+              coefs[ii] <- 0i
+              value <- 1
+            }
+            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis), value=value))
           }
           )
 
