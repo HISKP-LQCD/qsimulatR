@@ -30,7 +30,10 @@ x <- X(1) * qstate(nbits=2, basis=genComputationalBasis(2, collapse=","))
 x
 ```
 
-Using the Hadamard gate on both qbits gives a superposition in both qbits
+Note that we count the qbits from one to number of qbits, and the **least
+significant bit** (the right most one) is counted **first**. 
+
+Using the Hadamard gate on both qbits results in a superposition in both qbits
 
 ```{r}
 y <- H(2) * (H(1) * x)
@@ -71,7 +74,7 @@ z
 ```
 
 Now apply the Hadamard gate again on $x$ (the query register),
-i.e. the first qbit 
+i.e. the second qbit 
 
 ```{r}
 u <- H(2) * z
