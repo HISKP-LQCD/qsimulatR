@@ -1,6 +1,10 @@
 is.bitset <- function(x, bit) {
-  ## bitwAnd corrects numeric input to integer
-  return(bitwAnd(x, 2^(bit-1)) > 0)
+  return((x %/% 2^(bit-1)) %% 2 != 0)
+}
+
+normalise <- function(x) {
+  n = 1/sqrt(sum(Re(x*Conj(x))))
+  return(as.complex(x*n))
 }
 
 check_qstate <- function(object) {
@@ -8,7 +12,7 @@ check_qstate <- function(object) {
   stopifnot(object@nbits <= 16)
   N <- 2^object@nbits
   stopifnot(N == length(object@coefs))
-  stopifnot(N == length(object@basis))
+  stopifnot(1 == length(object@basis) || N == length(object@basis))
 }
 
 genStateString <- function(int, nbits, collapse="") {
@@ -37,9 +41,7 @@ genStateString <- function(int, nbits, collapse="") {
 genComputationalBasis <- function(nbits, collapse="") {
   basis <- c()
   N <- 2^nbits
-  for(i in 1:N) {
-    basis <- c(basis, genStateString(int=i-1L, nbits=nbits, collapse=collapse))
-  }
+  basis <- sapply(0:(N-1), genStateString, nbits=nbits, collapse=collapse)
   return(basis)
 }
 
@@ -90,7 +92,7 @@ qstate <- function(nbits=1L,
                    coefs=c(1+0i, rep(0i, times=2^nbits-1)),
                    basis=genComputationalBasis(nbits=nbits)) {
   return(methods::new("qstate", nbits=as.integer(nbits),
-                      coefs=as.complex(coefs),
+                      coefs=normalise(coefs),
                       basis=as.character(basis)))
 }
 
@@ -107,9 +109,13 @@ setMethod("show", signature(object = "qstate"),
             coefs <- SquashIm(object@coefs)
             for(i in 1:N) {
               if(abs(object@coefs[i]) > eps) {
-                if((i != 1) && !first) cat(" + ") ## only useful if 1st entry is non-zero
+                if((i != 1) && !first) cat(" + ")
                 else cat("   ")
-                cat("(", coefs[i], ")\t*", object@basis[i], "\n")
+                if(length(object@basis) == 1){
+                  cat("(", coefs[i], ")\t*", genStateString(i-1, object@nbits, collapse=object@basis), "\n")
+                }else{
+                  cat("(", coefs[i], ")\t*", object@basis[i], "\n")
+                }
                 first <- FALSE
               }
             }
@@ -189,7 +195,7 @@ setMethod("*", c("sqgate", "qstate"),
             ii <- c(0, 2^(bit-1))
             res <- c()
             al <- 0:(2^e2@nbits-1)
-            ii <- sapply(al, is.bitset, bit=bit)
+            ii <- is.bitset(al, bit=bit)
             kk <- !ii
             res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
             res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
@@ -355,9 +361,9 @@ setMethod("*", c("cnotgate", "qstate"),
             stopifnot(e1@bits[1] != e1@bits[2])
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
-            cb <- sapply(al, is.bitset, bit=e1@bits[1])
+            cb <- is.bitset(al, bit=e1@bits[1])
             ## target bit
-            tb <- sapply(al, is.bitset, bit=e1@bits[2])
+            tb <- is.bitset(al, bit=e1@bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
             tmp <- e2@coefs[x]
@@ -419,7 +425,7 @@ setMethod("measure", c("qstate", "numeric"),
             stopifnot(bit %in% c(1:e1@nbits))
             prob <- Re(e1@coefs * Conj(e1@coefs))
             N <- 2^e1@nbits
-            ii <- which((floor(c(0:(N-1)) / 2^(bit-1)) %% 2) == 0)
+            ii <- which(!is.bitset(0:(N-1), bit))
             is0 <- sum(prob[ii])
             value <- 0
             coefs <- e1@coefs
