@@ -22,7 +22,7 @@ the special case of $2$ qbits. The algorithm allows to distinguish
 between a constant or balanced function $f$ with a single application
 of $f$, relying on what is called quantum parallelism.
 
-We first prepare a state $|\psi_0 = |x, y\rangle = |0, 1\rangle$ with only 2
+We first prepare a state $|\psi_0\rangle = |x, y\rangle = |0, 1\rangle$ with only 2
 qbits as follows
 
 ```{r}
@@ -46,7 +46,7 @@ defined as $|x,y\rangle \to |x, y\oplus f(x)\rangle$, where $\oplus$
 is addition modulo $2$. The function $f$ is a function
 $\{0,1\}\to\{0,1\}$. 
 
-We first consider a so-called balanced function $f(x)$,~i.e. it is equal to
+We first consider a so-called balanced function $f(x)$, i.e.\ it is equal to
 $1$ for exactly half of the possible $x$. In our case with a single
 qbit $x$ this could be $f(0)=0$ and $f(1) = 1$. 
 
