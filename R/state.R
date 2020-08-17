@@ -57,7 +57,9 @@ eps <- 1.e-12
 #'
 #' @slot nbits The number of qbits
 #' @slot coefs The 2^nbits complex valued vector of coefficients
-#' @slot basis The basis vector
+#' @slot basis String or vector of strings. A single string will be interpreted 
+#' as the \code{collapse}-parameter in \code{genComputationalBasis}. A vector 
+#' of length 2^nbits yields the basis directly.
 #'
 #' @details
 #' The qbits are counted from 1 to \code{nbits} starting with the least
@@ -67,7 +69,7 @@ eps <- 1.e-12
 #' x <- qstate(nbits=2)
 #' x
 #'
-#' x <- qstate(nbits=2, coefs=as.complex(sqrt(rep(0.25, 4))))
+#' x <- qstate(nbits=2, coefs=as.complex(sqrt(rep(0.25, 4))), basis=",")
 #' x
 #'
 #' x <- qstate(nbits=1, coefs=as.complex(sqrt(rep(0.5, 2))), basis=c("|dead>", "|alive>"))
