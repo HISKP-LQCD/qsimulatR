@@ -128,6 +128,16 @@ setMethod("show", signature(object = "qstate"),
           }
           )
 
+
+annotate_bitnames <- function(i, y, cbit=FALSE, qbitnames=NULL, cbitnames=NULL) {
+  if(!cbit && !is.null(qbitnames) && (i <= length(qbitnames))) {
+    text(x=0.25, y=y, labels=qbitnames[i], pos=2)
+  }
+  if(cbit && !is.null(cbitnames) && (i <= length(cbitnames))) {
+    text(x=0.25, y=y, labels=cbitnames[i], pos=2)
+  }
+}
+
 setMethod("plot", signature(x = "qstate"),
           function(x, ...) {
             nbits <- x@nbits
@@ -135,23 +145,30 @@ setMethod("plot", signature(x = "qstate"),
             n <- nbits + ncbits
             ngates <- length(x@circuit$gatelist)
             plot(NA, ann=FALSE, xlim=c(0,ngates+1), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+            ## plot qbit lines
             for(i in c(n:(ncbits+1))) {
-              lines(x=c(0, ngates+1), y=c(i, i))
+              lines(x=c(0.3, ngates+1), y=c(i, i))
+              annotate_bitnames(i=n-i+1, y=i, ...)
             }
+            ## plot classical bit lines
             if(ncbits > 0) {
               for(i in c(ncbits:1)) {
-                lines(x=c(0, ngates+1), y=c(i-0.025, i-0.025))
-                lines(x=c(0, ngates+1), y=c(i+0.025, i+0.025))
+                lines(x=c(0.3, ngates+1), y=c(i-0.025, i-0.025))
+                lines(x=c(0.3, ngates+1), y=c(i+0.025, i+0.025))
+                annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
               }
             }
+            ## plot gates
             gatelist <- x@circuit$gatelist
             for(i in c(1:ngates)) {
+              ## single qbit gates
               if(is.na(gatelist[[i]]$bit2)) {
                 legend(x=i, y=n+1-gatelist[[i]]$bit1,
                        gatelist[[i]]$type, xjust=0.5, yjust=0.5,
                        x.intersp=-0.5, y.intersp=0.1,
                        bg="white")
               }
+              ## multi qbit gates
               else {
                 if(gatelist[[i]]$type == "CNOT") {
                   points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
@@ -165,6 +182,10 @@ setMethod("plot", signature(x = "qstate"),
                          "M", xjust=0.5, yjust=0.5,
                          x.intersp=-0.5, y.intersp=0.1,
                          bg="white")
+                  arrows(x0=i-0.2, x1=i+0.2,
+                         y0=ncbits+1-gatelist[[i]]$bit1-0.2,
+                         y1=ncbits+1-gatelist[[i]]$bit1+0.2,
+                         length=0.1)
                 }
               }
             }
