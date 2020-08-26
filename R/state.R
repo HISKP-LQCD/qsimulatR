@@ -182,19 +182,14 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             for(i in c(1:ngates)) {
               ## single qbit gates
               if(is.na(gatelist[[i]]$bits[2])) {
+                type <- gatelist[[i]]$type
                 if(gatelist[[i]]$type == "Rz") {
-                  legend(x=i, y=n+1-gatelist[[i]]$bits[1],
-                         paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")"),
-                         xjust=0.5, yjust=0.5,
-                         x.intersp=-0.5, y.intersp=0.1,
-                         bg="white")
+                  type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                 }
-                else{
-                  legend(x=i, y=n+1-gatelist[[i]]$bits[1],
-                         gatelist[[i]]$type, xjust=0.5, yjust=0.5,
-                         x.intersp=-0.5, y.intersp=0.1,
-                         bg="white")
-                }
+                legend(x=i, y=n+1-gatelist[[i]]$bits[1],
+                       type, xjust=0.5, yjust=0.5,
+                       x.intersp=-0.5, y.intersp=0.1,
+                       bg="white")
               }
               ## multi qbit gates
               else {
