@@ -139,15 +139,26 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qbitnames=NULL, cbitnames=NULL) 
 }
 
 #' plot-qstate
+#'
+#' @description
+#' Plots a circuit corresponding to a qstate object
+#' 
 #' @param x qstate object
+#' @param y not used here
 #' @param ... additional parameters to be passed on
 #'
-#' @importFrom graphics plot lines points arrows legend
+#' @importFrom graphics plot lines points arrows legend text
 #' @return nothing is returned, but a plot created
 #'
-#' @export
-setMethod("plot", signature(x = "qstate"),
-          function(x, ...) {
+#' @examples
+#' x <- qstate(2)
+#' y <- H(1) * x
+#' z <- CNOT(c(1,2)) * y
+#' plot(z)
+#' 
+#' @exportMethod plot
+setMethod("plot", signature(x = "qstate", y = "missing"),
+          function(x, y, ...) {
             nbits <- x@nbits
             ncbits <- x@circuit$ncbits
             n <- nbits + ncbits
