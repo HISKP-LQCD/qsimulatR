@@ -82,20 +82,24 @@ eps <- 1.e-12
 setClass("qstate",
          representation(nbits="integer",
                         coefs="complex",
-                        basis="character"),
+                        basis="character",
+                        circuit="list"),
          prototype(nbits=1L,
                    coefs=c(1. + 0i, 0i),
-                   basis=genComputationalBasis(1L)),
+                   basis=genComputationalBasis(1L),
+                   circuit=list(ncbits=0, gatelist=list())),
          validity=check_qstate)
 
 ## "constructor" function
 #' @export
 qstate <- function(nbits=1L,
                    coefs=c(1+0i, rep(0i, times=2^nbits-1)),
-                   basis=genComputationalBasis(nbits=nbits)) {
+                   basis=genComputationalBasis(nbits=nbits),
+                   circuit=list(ncbits=0, gatelist=list())) {
   return(methods::new("qstate", nbits=as.integer(nbits),
                       coefs=normalise(coefs),
-                      basis=as.character(basis)))
+                      basis=as.character(basis),
+                      circuit=circuit))
 }
 
 ## Convert to numeric vector if and only if all imaginary parts equal zero
@@ -119,6 +123,41 @@ setMethod("show", signature(object = "qstate"),
                   cat("(", coefs[i], ")\t*", object@basis[i], "\n")
                 }
                 first <- FALSE
+              }
+            }
+          }
+          )
+
+setMethod("plot", signature(x = "qstate"),
+          function(x, ...) {
+            nbits <- x@nbits
+            ncbits <- x@circuit$ncbits
+            n <- nbits + ncbits
+            ngates <- length(x@circuit$gatelist)
+            plot(NA, ann=FALSE, xlim=c(0,ngates+1), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+            for(i in c(n:(ncbits+1))) {
+              lines(x=c(0, ngates+1), y=c(i, i))
+            }
+            if(ncbits > 0) {
+              for(i in c(ncbits:1)) {
+                lines(x=c(0, ngates+1), y=c(i-0.05, i-0.05))
+                lines(x=c(0, ngates+1), y=c(i+0.05, i+0.05))
+              }
+            }
+            gatelist <- x@circuit$gatelist
+            for(i in c(1:ngates)) {
+              if(is.na(gatelist[[i]]$bit2)) {
+                legend(x=i, y=gatelist[[i]]$bit1,
+                       gatelist[[i]]$type, xjust=0.5, yjust=0.5,
+                       x.intersp=-0.5, y.intersp=0.1,
+                       bg="white")
+              }
+              else {
+                if(gatelist[[i]]$type == "CNOT") {
+                  points(x=i, y=gatelist[[i]]$bit1, pch=19, cex=1.5)
+                  points(x=i, y=gatelist[[i]]$bit2, pch=10, cex=2.5)
+                  lines(x=c(i,i), y=c(gatelist[[i]]$bit1, gatelist[[i]]$bit2))
+                }
               }
             }
           }
@@ -171,13 +210,16 @@ check_sqgate  <- function(object) {
 #' @exportClass sqgate
 setClass("sqgate",
          representation(bit="integer",
-                        M="array"),
-         prototype(bit=c(1L), M=array(as.complex(c(1,0,0,1)), dim=c(2,2))),
+                        M="array",
+                        type="character"),
+         prototype(bit=c(1L),
+                   M=array(as.complex(c(1,0,0,1)), dim=c(2,2)),
+                   type="1"),
          validity=check_sqgate)
 
 #' @export
-sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2))) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=M))
+sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="1") {
+  return(methods::new("sqgate", bit=as.integer(bit), M=M, type=type))
 }
 
 #' times-sqgate-qstate
@@ -201,8 +243,12 @@ setMethod("*", c("sqgate", "qstate"),
             kk <- !ii
             res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
             res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
-
-            return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis))
+            ## the gatelist needs to be extended for plotting
+            circuit <- e2@circuit
+            ngates <- length(circuit$gatelist)
+            circuit$gatelist[[ngates+1]] <- list(type=e1@type, bit1=e1@bit, bit2=NA)
+            
+            return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
           }
           )
 
@@ -234,7 +280,7 @@ setMethod("*", c("sqgate", "qstate"),
 #' An S4 class 'sqgate' object is returned
 #' @export
 H <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2)))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2), type="H"))
 }
 #' The Rz gate
 #' 
@@ -250,7 +296,7 @@ H <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Rz <- function(bit, theta=0.) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2))))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2)), type="Rz"))
 }
 #' The S gate
 #' 
@@ -265,7 +311,7 @@ Rz <- function(bit, theta=0.) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 S <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2))))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2)), type="S"))
 }
 #' The Tgate gate
 #' 
@@ -280,7 +326,7 @@ S <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Tgate <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2))))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2)), type="T"))
 }
 #' The X gate
 #' 
@@ -295,7 +341,7 @@ Tgate <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 X <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2))))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2)), type="X"))
 }
 #' The Z gate
 #' 
@@ -310,7 +356,7 @@ X <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Z <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2))))
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2)), type="Z"))
 }
 
 #' The CNOT gate
@@ -371,6 +417,10 @@ setMethod("*", c("cnotgate", "qstate"),
             tmp <- e2@coefs[x]
             e2@coefs[x] <- e2@coefs[y]
             e2@coefs[y] <- tmp
+            ## again the circuit needs extension for plotting
+            ngates <- length(e2@circuit$gatelist)
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bit1=e1@bits[1], bit2=e1@bits[2])
+
             return(e2)
           }
           )
@@ -436,7 +486,8 @@ setMethod("measure", c("qstate", "numeric"),
               coefs[ii] <- 0i
               value <- 1
             }
-            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis), value=value))
+            circuit <- e1@circuit
+            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=circuit), value=value))
           }
           )
 
