@@ -3,7 +3,11 @@ Version: 0.1
 Date: 2020-05-05
 Title: A quantum computer simulator in R
 Authors@R: 
-    c(person(given = "Carsten",
+    c(person(given = "Johann",
+             family = "Ostmeyer",
+             role = "aut",
+             email = "ostmeyer@hiskp.uni-bonn.de"),
+      person(given = "Carsten",
              family = "Urbach",
              role = c("aut", "cre"),
              email = "urbach@hiskp.uni-bonn.de"))
@@ -19,5 +23,5 @@ Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
 RoxygenNote: 7.1.0
 Encoding: UTF-8
 VignetteBuilder: knitr
-URL: https://github.com/urbach/qsimulatR
-BugReports: https://github.com/urbach/qsimulatR/issues
+URL: https://github.com/HISKP-LQCD/qsimulatR
+BugReports: https://github.com/HISKP-LQCD/qsimulatR/issues
