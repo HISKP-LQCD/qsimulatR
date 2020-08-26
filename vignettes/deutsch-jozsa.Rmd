@@ -87,7 +87,15 @@ Now qbit $2$ equals $1$, thus, if we measure,
 value <- measure(u, 2)$value
 ```
 
-we obtain $`r value`$. On the other hand, a constant function
+we obtain $`r value`$. We can also plot the corresponding circuit
+
+```{r, fig.align='center'}
+plot(measure(u, 2)$psi, qbitnames=c("|y>", "|x>"), cbitnames="c")
+```
+
+
+
+On the other hand, a constant function
 $f(x) = 1$ leads to
 
 * $x=0, y=0$, $U_f(|0,0\rangle) = |0, 0\oplus f(0)\rangle = |0, 1\rangle$

@@ -138,6 +138,14 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qbitnames=NULL, cbitnames=NULL) 
   }
 }
 
+#' plot-qstate
+#' @param x qstate object
+#' @param ... additional parameters to be passed on
+#'
+#' @importFrom graphics plot lines points arrows legend
+#' @return nothing is returned, but a plot created
+#'
+#' @export
 setMethod("plot", signature(x = "qstate"),
           function(x, ...) {
             nbits <- x@nbits
@@ -178,13 +186,13 @@ setMethod("plot", signature(x = "qstate"),
                 if(gatelist[[i]]$type == "measure") {
                   lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bit1, ncbits+1-gatelist[[i]]$bit2))
                   points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
-                  legend(x=i, y=ncbits+1-gatelist[[i]]$bit1,
+                  legend(x=i, y=ncbits+1-gatelist[[i]]$bit2,
                          "M", xjust=0.5, yjust=0.5,
                          x.intersp=-0.5, y.intersp=0.1,
                          bg="white")
                   arrows(x0=i-0.2, x1=i+0.2,
-                         y0=ncbits+1-gatelist[[i]]$bit1-0.2,
-                         y1=ncbits+1-gatelist[[i]]$bit1+0.2,
+                         y0=ncbits+1-gatelist[[i]]$bit2-0.2,
+                         y1=ncbits+1-gatelist[[i]]$bit2+0.2,
                          length=0.1)
                 }
               }
