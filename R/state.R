@@ -181,29 +181,38 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             gatelist <- x@circuit$gatelist
             for(i in c(1:ngates)) {
               ## single qbit gates
-              if(is.na(gatelist[[i]]$bit2)) {
-                legend(x=i, y=n+1-gatelist[[i]]$bit1,
-                       gatelist[[i]]$type, xjust=0.5, yjust=0.5,
-                       x.intersp=-0.5, y.intersp=0.1,
-                       bg="white")
+              if(is.na(gatelist[[i]]$bits[2])) {
+                if(gatelist[[i]]$type == "Rz") {
+                  legend(x=i, y=n+1-gatelist[[i]]$bits[1],
+                         paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")"),
+                         xjust=0.5, yjust=0.5,
+                         x.intersp=-0.5, y.intersp=0.1,
+                         bg="white")
+                }
+                else{
+                  legend(x=i, y=n+1-gatelist[[i]]$bits[1],
+                         gatelist[[i]]$type, xjust=0.5, yjust=0.5,
+                         x.intersp=-0.5, y.intersp=0.1,
+                         bg="white")
+                }
               }
               ## multi qbit gates
               else {
                 if(gatelist[[i]]$type == "CNOT") {
-                  points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bit2, pch=10, cex=2.5)
-                  lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bit1, gatelist[[i]]$bit2))
+                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
+                  lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
                 }
                 if(gatelist[[i]]$type == "measure") {
-                  lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bit1, ncbits+1-gatelist[[i]]$bit2))
-                  points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
-                  legend(x=i, y=ncbits+1-gatelist[[i]]$bit2,
+                  lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
+                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                  legend(x=i, y=ncbits+1-gatelist[[i]]$bits[2],
                          "M", xjust=0.5, yjust=0.5,
                          x.intersp=-0.5, y.intersp=0.1,
                          bg="white")
                   arrows(x0=i-0.2, x1=i+0.2,
-                         y0=ncbits+1-gatelist[[i]]$bit2-0.2,
-                         y1=ncbits+1-gatelist[[i]]$bit2+0.2,
+                         y0=ncbits+1-gatelist[[i]]$bits[2]-0.2,
+                         y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
                          length=0.1)
                 }
               }
@@ -262,11 +271,11 @@ setClass("sqgate",
                         type="character"),
          prototype(bit=c(1L),
                    M=array(as.complex(c(1,0,0,1)), dim=c(2,2)),
-                   type="1"),
+                   type="Id"),
          validity=check_sqgate)
 
 #' @export
-sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="1") {
+sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id") {
   return(methods::new("sqgate", bit=as.integer(bit), M=M, type=type))
 }
 
@@ -294,7 +303,8 @@ setMethod("*", c("sqgate", "qstate"),
             ## the gatelist needs to be extended for plotting
             circuit <- e2@circuit
             ngates <- length(circuit$gatelist)
-            circuit$gatelist[[ngates+1]] <- list(type=e1@type, bit1=e1@bit, bit2=NA)
+            circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
+            if(e1@type == "Rz") circuit$gatelist[[ngates+1]]$angle <- -Re(2*1i*log(e1@M[2,2]))
             
             return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
           }
@@ -329,6 +339,21 @@ setMethod("*", c("sqgate", "qstate"),
 #' @export
 H <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2), type="H"))
+}
+#' The identity gate
+#'
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- Id(1) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Id <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id"))
 }
 #' The Rz gate
 #' 
@@ -390,6 +415,21 @@ Tgate <- function(bit) {
 #' @export
 X <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2)), type="X"))
+}
+#' The Y gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#'
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- Y(1) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Y <- function(bit) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., -1i, 1i, 0.)), dim=c(2,2)), type="Y"))
 }
 #' The Z gate
 #' 
@@ -467,7 +507,7 @@ setMethod("*", c("cnotgate", "qstate"),
             e2@coefs[y] <- tmp
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
-            e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bit1=e1@bits[1], bit2=e1@bits[2])
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bits=c(e1@bits, NA))
 
             return(e2)
           }
@@ -536,7 +576,7 @@ setMethod("measure", c("qstate", "numeric"),
             }
             ngates <- length(e1@circuit$gatelist)
             cbit <- e1@circuit$ncbits+1
-            e1@circuit$gatelist[[ngates+1]] <- list(type="measure", bit1=bit, bit2=cbit)
+            e1@circuit$gatelist[[ngates+1]] <- list(type="measure", bits=c(bit, cbit, NA))
             e1@circuit$ncbits <- cbit
             return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=e1@circuit), value=value))
           }
@@ -570,10 +610,15 @@ export2qasm <- function(object, filename="circuit.py", append=FALSE) {
   if(ngates > 0) {
     for(i in c(1:ngates)) {
       op <- ""
-      if(object@circuit$gatelist[[i]]$type == "H") op <- paste0("h(", object@circuit$gatelist[[i]]$bit1-1, ")")
-      if(object@circuit$gatelist[[i]]$type == "X") op <- paste0("x(", object@circuit$gatelist[[i]]$bit1-1, ")")
-      if(object@circuit$gatelist[[i]]$type == "CNOT") op <- paste0("cx(", object@circuit$gatelist[[i]]$bit1-1, ",", object@circuit$gatelist[[i]]$bit2-1, ")")
-      if(object@circuit$gatelist[[i]]$type == "measure") op <- paste0("measure([", object@circuit$gatelist[[i]]$bit1-1, "],[", object@circuit$gatelist[[i]]$bit2-1, "])")
+      if(object@circuit$gatelist[[i]]$type == "H") op <- paste0("h(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "X") op <- paste0("x(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "Y") op <- paste0("y(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "Z") op <- paste0("z(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "S") op <- paste0("s(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "Tgate") op <- paste0("t(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "Rz") op <- paste0("rz(", object@circuit$gatelist[[i]]$angle, ",", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "CNOT") op <- paste0("cx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "measure") op <- paste0("measure([", object@circuit$gatelist[[i]]$bits[1]-1, "],[", object@circuit$gatelist[[i]]$bits[2]-1, "])")
       olines <- c(olines, paste0("qc.", op))
     }
   }
