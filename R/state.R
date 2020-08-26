@@ -140,23 +140,31 @@ setMethod("plot", signature(x = "qstate"),
             }
             if(ncbits > 0) {
               for(i in c(ncbits:1)) {
-                lines(x=c(0, ngates+1), y=c(i-0.05, i-0.05))
-                lines(x=c(0, ngates+1), y=c(i+0.05, i+0.05))
+                lines(x=c(0, ngates+1), y=c(i-0.025, i-0.025))
+                lines(x=c(0, ngates+1), y=c(i+0.025, i+0.025))
               }
             }
             gatelist <- x@circuit$gatelist
             for(i in c(1:ngates)) {
               if(is.na(gatelist[[i]]$bit2)) {
-                legend(x=i, y=gatelist[[i]]$bit1,
+                legend(x=i, y=n+1-gatelist[[i]]$bit1,
                        gatelist[[i]]$type, xjust=0.5, yjust=0.5,
                        x.intersp=-0.5, y.intersp=0.1,
                        bg="white")
               }
               else {
                 if(gatelist[[i]]$type == "CNOT") {
-                  points(x=i, y=gatelist[[i]]$bit1, pch=19, cex=1.5)
-                  points(x=i, y=gatelist[[i]]$bit2, pch=10, cex=2.5)
-                  lines(x=c(i,i), y=c(gatelist[[i]]$bit1, gatelist[[i]]$bit2))
+                  points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bit2, pch=10, cex=2.5)
+                  lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bit1, gatelist[[i]]$bit2))
+                }
+                if(gatelist[[i]]$type == "measure") {
+                  lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bit1, ncbits+1-gatelist[[i]]$bit2))
+                  points(x=i, y=n+1-gatelist[[i]]$bit1, pch=19, cex=1.5)
+                  legend(x=i, y=ncbits+1-gatelist[[i]]$bit1,
+                         "M", xjust=0.5, yjust=0.5,
+                         x.intersp=-0.5, y.intersp=0.1,
+                         bg="white")
                 }
               }
             }
@@ -486,8 +494,11 @@ setMethod("measure", c("qstate", "numeric"),
               coefs[ii] <- 0i
               value <- 1
             }
-            circuit <- e1@circuit
-            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=circuit), value=value))
+            ngates <- length(e1@circuit$gatelist)
+            cbit <- e1@circuit$ncbits+1
+            e1@circuit$gatelist[[ngates+1]] <- list(type="measure", bit1=bit, bit2=cbit)
+            e1@circuit$ncbits <- cbit
+            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=e1@circuit), value=value))
           }
           )
 
