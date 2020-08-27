@@ -142,6 +142,8 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qbitnames=NULL, cbitnames=NULL) 
 #'
 #' @description
 #' Plots a circuit corresponding to a qstate object
+#'
+#' @aliases plot
 #' 
 #' @param x qstate object
 #' @param y not used here
@@ -517,6 +519,7 @@ setMethod("*", c("cnotgate", "qstate"),
 #' 
 #' @param e1 object to measure
 #' @param bit bit to project on
+#' @docType methods
 #' @exportMethod measure
 setGeneric("measure", function(e1, bit) attributes(e1))
 
