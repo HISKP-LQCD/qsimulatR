@@ -28,7 +28,7 @@ genStateString <- function(int, nbits, collapse="") {
 #' function to generate the basis strings for given number of
 #' bits
 #'
-#' @param nbits integer. The number of qbits
+#' @param nbits integer. The number of qubits
 #' @param collapse character. String to fill in between separate bits
 #'
 #' @return a character vector of length 2^nbits
@@ -55,14 +55,14 @@ eps <- 1.e-12
 #'
 #' This class represents a quantum state
 #'
-#' @slot nbits The number of qbits
+#' @slot nbits The number of qubits
 #' @slot coefs The 2^nbits complex valued vector of coefficients
 #' @slot basis String or vector of strings. A single string will be interpreted 
 #' as the \code{collapse}-parameter in \code{genComputationalBasis}. A vector 
 #' of length 2^nbits yields the basis directly.
 #'
 #' @details
-#' The qbits are counted from 1 to \code{nbits} starting with the least
+#' The qubits are counted from 1 to \code{nbits} starting with the least
 #' significant bit.
 #' 
 #' @examples
@@ -129,9 +129,9 @@ setMethod("show", signature(object = "qstate"),
           )
 
 
-annotate_bitnames <- function(i, y, cbit=FALSE, qbitnames=NULL, cbitnames=NULL) {
-  if(!cbit && !is.null(qbitnames) && (i <= length(qbitnames))) {
-    text(x=0.25, y=y, labels=qbitnames[i], pos=2)
+annotate_bitnames <- function(i, y, cbit=FALSE, qubitnames=NULL, cbitnames=NULL) {
+  if(!cbit && !is.null(qubitnames) && (i <= length(qubitnames))) {
+    text(x=0.25, y=y, labels=qubitnames[i], pos=2)
   }
   if(cbit && !is.null(cbitnames) && (i <= length(cbitnames))) {
     text(x=0.25, y=y, labels=cbitnames[i], pos=2)
@@ -166,7 +166,7 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             n <- nbits + ncbits
             ngates <- length(x@circuit$gatelist)
             plot(NA, ann=FALSE, xlim=c(0,ngates+1), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
-            ## plot qbit lines
+            ## plot qubit lines
             for(i in c(n:(ncbits+1))) {
               lines(x=c(0.3, ngates+1), y=c(i, i))
               annotate_bitnames(i=n-i+1, y=i, ...)
@@ -182,7 +182,7 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             ## plot gates
             gatelist <- x@circuit$gatelist
             for(i in c(1:ngates)) {
-              ## single qbit gates
+              ## single qubit gates
               if(is.na(gatelist[[i]]$bits[2])) {
                 type <- gatelist[[i]]$type
                 if(gatelist[[i]]$type == "Rz") {
@@ -193,7 +193,7 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                        x.intersp=-0.5, y.intersp=0.1,
                        bg="white")
               }
-              ## multi qbit gates
+              ## multi qubit gates
               else {
                 if(gatelist[[i]]$type == "CNOT") {
                   points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
@@ -249,7 +249,7 @@ check_sqgate  <- function(object) {
 #' gate
 #'
 #' @details
-#' The qbits are counted from 1 to \code{nbits} starting with the least
+#' The qubits are counted from 1 to \code{nbits} starting with the least
 #' significant bit.
 #' 
 #' @examples
@@ -526,7 +526,7 @@ setGeneric("measure", function(e1, bit) attributes(e1))
 #' @rdname measure-methods
 #' @aliases measure
 #'
-#' @details \code{measure(e1)} performs a projection of the total wave function (i.e. all qbits).
+#' @details \code{measure(e1)} performs a projection of the total wave function (i.e. all qubits).
 #'
 #' @return
 #' \code{measure(e1)} returns a `qstate` object representing the state projected on.
@@ -550,7 +550,7 @@ setMethod("measure", c("qstate"),
 #'
 #' @return
 #' \code{measure(e1, bit)} returns a list with an element `psi` the `qstate` object projected onto
-#' and an element `value` with the value of the qbit `bit`.
+#' and an element `value` with the value of the qubit `bit`.
 #'
 #' @importFrom stats runif
 #' @examples
