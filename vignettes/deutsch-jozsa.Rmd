@@ -18,22 +18,22 @@ library(qsimulatR)
 # The Deutsch-Sosza Algorithm
 
 This is an example implementation of the Deutsch-Sosza algorithm for
-the special case of $2$ qbits. The algorithm allows to distinguish
+the special case of $2$ qubits. The algorithm allows to distinguish
 between a constant or balanced function $f$ with a single application
 of $f$, relying on what is called quantum parallelism.
 
 We first prepare a state $|\psi_0\rangle = |x, y\rangle = |0, 1\rangle$ with only 2
-qbits as follows
+qubits as follows
 
 ```{r}
 x <- X(1) * qstate(nbits=2, basis=genComputationalBasis(2, collapse=","))
 x
 ```
 
-Note that we count the qbits from one to number of qbits, and the **least
+Note that we count the qubits from one to number of qubits, and the **least
 significant bit** (the right most one) is counted **first**. 
 
-Using the Hadamard gate on both qbits results in a superposition in both qbits
+Using the Hadamard gate on both qubits results in a superposition in both qubits
 
 ```{r}
 y <- H(2) * (H(1) * x)
@@ -48,10 +48,10 @@ $\{0,1\}\to\{0,1\}$.
 
 We first consider a so-called balanced function $f(x)$, i.e.\ it is equal to
 $1$ for exactly half of the possible $x$. In our case with a single
-qbit $x$ this could be $f(0)=0$ and $f(1) = 1$. 
+qubit $x$ this could be $f(0)=0$ and $f(1) = 1$. 
 
 $U_f$ is realised in this case by CNOT$(2,1)$, where we consider the
-second qbit as the control qbit. For $|x, y\oplus f(x)\rangle$, there
+second qubit as the control qubit. For $|x, y\oplus f(x)\rangle$, there
 are four different possiblities
 
 * $x=0, y=0$, $U_f(|0,0\rangle) = |0, 0\oplus f(0)\rangle = |0, 0\rangle$
@@ -74,14 +74,14 @@ z
 ```
 
 Now apply the Hadamard gate again on $x$ (the query register),
-i.e. the second qbit 
+i.e. the second qubit 
 
 ```{r}
 u <- H(2) * z
 u
 ```
 
-Now qbit $2$ equals $1$, thus, if we measure, 
+Now qubit $2$ equals $1$, thus, if we measure, 
 
 ```{r}
 value <- measure(u, 2)$value
@@ -90,7 +90,7 @@ value <- measure(u, 2)$value
 we obtain $`r value`$. We can also plot the corresponding circuit
 
 ```{r, fig.align='center'}
-plot(measure(u, 2)$psi, qbitnames=c("|y>", "|x>"), cbitnames="c")
+plot(measure(u, 2)$psi, qubitnames=c("|y>", "|x>"), cbitnames="c")
 ```
 
 
@@ -103,7 +103,7 @@ $f(x) = 1$ leads to
 * $x=0, y=1$, $U_f(|0,1\rangle) = |0, 1\oplus f(0)\rangle = |0, 0\rangle$
 * $x=1, y=1$, $U_f(|1,1\rangle) = |1, 1\oplus f(1)\rangle = |1, 0\rangle$
 
-which can be realised with a NOT operation on the first qbit
+which can be realised with a NOT operation on the first qubit
 
 * X$(1)|0,0\rangle = |0,1\rangle$
 * X$(1)|1,0\rangle = |1,1\rangle$
@@ -122,5 +122,5 @@ u
 value <- measure(u, 2)$value
 ```
 
-and we obtain $`r value`$ for the second qbit.
+and we obtain $`r value`$ for the second qubit.
 
