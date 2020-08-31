@@ -1,7 +1,23 @@
+#' is.bitset
+#'
+#' checks whether or not a bit is set in target
+#'
+#' @param x target
+#' @param bit integer. The bit to check
+#'
+#' @return a boolean
 is.bitset <- function(x, bit) {
   return((x %/% 2^(bit-1)) %% 2 != 0)
 }
 
+#' normalise
+#'
+#' Normalises a complex vector to 1
+#'
+#' @param x complex valued vector
+#'
+#' @return
+#' Returns the normalised complex valued vector
 normalise <- function(x) {
   n = 1/sqrt(sum(Re(x*Conj(x))))
   return(as.complex(x*n))
@@ -50,7 +66,6 @@ qstatecoefs <- function(y) {
   else y
 }
 
-eps <- 1.e-12
 #' The qstate class
 #'
 #' This class represents a quantum state
@@ -113,6 +128,7 @@ setMethod("show", signature(object = "qstate"),
             N <- 2^object@nbits
             first <- TRUE
             coefs <- SquashIm(object@coefs)
+            eps <- 1.e-12
             for(i in 1:N) {
               if(abs(object@coefs[i]) > eps) {
                 if((i != 1) && !first) cat(" + ")
@@ -199,6 +215,12 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                   points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
                   points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
                   lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+                }
+                if(gatelist[[i]]$type == "CCNOT") {
+                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
+                  lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
                 }
                 if(gatelist[[i]]$type == "measure") {
                   lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
@@ -499,9 +521,10 @@ setMethod("*", c("cnotgate", "qstate"),
             tb <- is.bitset(al, bit=e1@bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
-            tmp <- e2@coefs[x]
-            e2@coefs[x] <- e2@coefs[y]
-            e2@coefs[y] <- tmp
+            #tmp <- e2@coefs[x]
+            #e2@coefs[x] <- e2@coefs[y]
+            #e2@coefs[y] <- tmp
+            e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
             e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bits=c(e1@bits, NA))
@@ -509,6 +532,81 @@ setMethod("*", c("cnotgate", "qstate"),
             return(e2)
           }
           )
+
+
+#' The CCNOT gate
+#'
+#' This class represents a generic CNOT gate
+#'
+#' @slot bits Integer vector of length 2. First two bits are the control bits,
+#'            third the target bit.
+#'
+#' @examples
+#' x <- qstate(nbits=3)
+#' z <- CCNOT(c(1,2,3)) * (H(1) * x)
+#'
+#' @name ccnotgate
+#' @aliases toffoligate toffoli
+#' @rdname ccnotgate
+#' @aliases ccnotgate-class
+#' @exportClass ccnotgate
+setClass("ccnotgate",
+         representation(bits="integer"),
+         prototype(bits=c(1L, 2L, 3L)))
+
+#' @export
+ccnotgate <- function(bits=c(1, 2)) return(methods::new("ccnotgate", bits=as.integer(bits)))
+
+#' The CCNOT or toffoli gate
+#'
+#' @param bits integer vector of length two, the first bit being the control and the second
+#' the target bit.
+#'
+#' @aliases toffoli
+#' @return
+#' An S4 class 'ccnotgate' object is returned
+#' @export
+CCNOT <- function(bits=c(1, 2, 3)) return(methods::new("ccnotgate", bits=as.integer(bits)))
+
+#' @rdname CCNOT
+#' @aliases CCNOT
+#' @export
+toffoli <- function(bits=c(1, 2, 3)) return(methods::new("ccnotgate", bits=as.integer(bits)))
+
+#' times-ccnotgate-qstate
+#'
+#' Applies a CCNOT (or toffoli) gate to a quantum state.
+#'
+#' @param e1 object of S4 class 'ccnotgate'
+#' @param e2 object of S4 class 'qstate'
+#'
+#' @aliases "*"
+#' @return
+#' An object of S4 class 'qstate'
+setMethod("*", c("ccnotgate", "qstate"),
+          function(e1, e2) {
+            stopifnot(length(e1@bits) == 3)
+            stopifnot(length(e1@bits) == length(unique(e1@bits)))
+            stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
+            ## control bit == 1
+            al <- 0:(2^e2@nbits-1)
+            cb <- is.bitset(al, bit=e1@bits[1]) & is.bitset(al, bit=e1@bits[2])
+            ## target bit
+            tb <- is.bitset(al, bit=e1@bits[3])
+            x <- which(cb & tb)
+            y <- which(cb & !tb)
+            #tmp <- e2@coefs[x]
+            #e2@coefs[x] <- e2@coefs[y]
+            #e2@coefs[y] <- tmp
+            e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
+            ## again the circuit needs extension for plotting
+            ngates <- length(e2@circuit$gatelist)
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CCNOT", bits=c(e1@bits))
+
+            return(e2)
+          }
+          )
+
 
 #' Method measure
 #' @name measure
@@ -616,6 +714,7 @@ export2qasm <- function(object, filename="circuit.py", append=FALSE) {
       if(object@circuit$gatelist[[i]]$type == "Tgate") op <- paste0("t(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "Rz") op <- paste0("rz(", object@circuit$gatelist[[i]]$angle, ",", object@circuit$gatelist[[i]]$bits[1]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "CNOT") op <- paste0("cx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "CCNOT") op <- paste0("ccx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ",", object@circuit$gatelist[[i]]$bits[3]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "measure") op <- paste0("measure([", object@circuit$gatelist[[i]]$bits[1]-1, "],[", object@circuit$gatelist[[i]]$bits[2]-1, "])")
       olines <- c(olines, paste0("qc.", op))
     }
