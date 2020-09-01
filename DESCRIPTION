@@ -11,10 +11,12 @@ Authors@R:
              family = "Urbach",
              role = c("aut", "cre"),
              email = "urbach@hiskp.uni-bonn.de"))
-Description: A quantum computer simulator framework. It currently implements the
-    most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT), supports plotting
-    of circuits and is able to export circuits into IBM's QASM python 
-    language.
+Description: A quantum computer simulator framework. It allows to
+    define general single qubit gates and general controlled single
+    qubit gates. For convenience, it currently provides the
+    most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT, SWAP, toffoli or
+    CCNOT, CSWAP). qsimulatR supports plotting of circuits and is able to
+    export circuits into IBM's QASM python language.
 Imports:
     methods,
     stats

@@ -54,9 +54,6 @@ setMethod("*", c("cnotgate", "qstate"),
             tb <- is.bitset(al, bit=e1@bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
-            #tmp <- e2@coefs[x]
-            #e2@coefs[x] <- e2@coefs[y]
-            #e2@coefs[y] <- tmp
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
@@ -127,9 +124,6 @@ setMethod("*", c("ccnotgate", "qstate"),
             tb <- is.bitset(al, bit=e1@bits[3])
             x <- which(cb & tb)
             y <- which(cb & !tb)
-            #tmp <- e2@coefs[x]
-            #e2@coefs[x] <- e2@coefs[y]
-            #e2@coefs[y] <- tmp
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
