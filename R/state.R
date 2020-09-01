@@ -75,6 +75,9 @@ qstatecoefs <- function(y) {
 #' @slot basis String or vector of strings. A single string will be interpreted 
 #' as the \code{collapse}-parameter in \code{genComputationalBasis}. A vector 
 #' of length 2^nbits yields the basis directly.
+#' @slot circuit List containing the number of non-quantum bits \code{ncbits}
+#' and a list of gates \code{gatelist} applied to the original state.
+#' Filled automatically as gates are applied, required for plotting.
 #'
 #' @details
 #' The qubits are counted from 1 to \code{nbits} starting with the least
