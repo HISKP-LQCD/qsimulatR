@@ -83,15 +83,21 @@ setClass("cswapgate",
 #' @export
 cswapgate <- function(bits=c(1, 2)) return(methods::new("cswapgate", bits=as.integer(bits)))
 
-#' The CSWAP 
+#' The CSWAP or Fredkin gate
 #'
 #' @param bits integer vector of length two, the first bit being the control and the second
 #' the target bit.
 #'
+#' @aliases fredkin
 #' @return
 #' An S4 class 'cswapgate' object is returned
 #' @export
 CSWAP <- function(bits=c(1, 2, 3)) return(methods::new("cswapgate", bits=as.integer(bits)))
+
+#' @rdname CSWAP
+#' @aliases CSWAP
+#' @export
+fredkin <- function(bits=c(1, 2, 3)) return(methods::new("cswapgate", bits=as.integer(bits)))
 
 #' times-cswapgate-qstate
 #'
