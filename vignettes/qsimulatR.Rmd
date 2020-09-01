@@ -1,0 +1,213 @@
+---
+title: "qsimulatR"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{qsimulatR}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+```
+
+# qsimulatR Package
+
+In this vignette we provide basic usage examples of the `qsimulatR`
+package. 
+
+## A quantum state
+
+The basis for the simulator is a quantum state, called `qstate` in
+`qsimulatR` realised as an S4 class. One can generate a `qstate` with
+a number of qubits as follows
+
+```{r}
+x <- qstate(nbits=2)
+x
+```
+
+Per default this state is in the computational basis with all qubits
+in the $|0\rangle$ state. The basis state can also be supplied to
+`qstate` as an optional argument, e.g.
+
+```{r}
+CatInBox <- qstate(nbits=1, basis=c("|dead>", "|alive>"))
+CatInBox
+```
+
+and also the coefficients of the separate basis states can be set
+
+```{r}
+CatInBox <- qstate(nbits=1, basis=c("|dead>", "|alive>"),
+                   coefs=as.complex(c(1/sqrt(2), 1/sqrt(2))))
+CatInBox
+```
+
+A `qstate` object can also be plotted. If no gate was applied yet,
+this is not very interesting
+
+```{r, fig.align="center"}
+plot(x, qubitnames=c("bit1", "bit2"))
+```
+
+## Applying single qubit gates
+
+Next one can apply single qubit quantum
+gates to such a `qstate`, like for instance the Hadamard gate
+
+```{r}
+x <- qstate(nbits=2)
+y <- H(1) * x
+y
+```
+
+where the argument to `H` is the qubit to which to apply the gate. in
+`R` we start counting with 1, which corresponds to the least
+significant bit (or the rightmost one in $|00\rangle$). `H(1)` returns
+an S4 object of class `sqgate` and the multiplication is overloaded.
+
+Now, with a gate included, plotting the state represents the quantum
+circuit used to generate the state, for instance
+
+```{r, fig.align="center"}
+plot(y)
+```
+
+Even if there is a list of predefined single qubit gates (`H`, `X`,
+`Z`, `Y`, `Rz`, `Id`, `S`, `Tgate`), any single qubit gate can be defined
+as follows
+
+```{r}
+myGate <- function(bit) {
+  methods::new("sqgate", bit=as.integer(bit),
+               M=array(as.complex(c(1,0,0,-1)), dim=c(2,2)),
+               type="myGate")
+}
+```
+
+From now on this gate can be used like the predefined ones
+
+```{r}
+z <- myGate(1) * y
+z
+```
+
+The argument `M` must be a unitary $2\times 2$ complex valued matrix,
+which in this case is the third Pauli matrix predefined as `Z`.
+
+## Multi-qubit gates
+
+The most important two-qubit gate is the controlled `NOT` or `CNOT`
+gate. It can for instance be used as follows to generate a Bell state
+
+```{r}
+z <- CNOT(c(1,2)) * y
+z
+```
+
+Plotting the resulting circuit looks as follows
+
+```{r, fig.align="center"}
+plot(z)
+```
+
+The arguments to `CNOT` are the controll and target bit in this
+order. Again, arbitrary controlled single qubit gates can be generated
+as follows
+
+```{r}
+CX12 <- cqgate(bits=c(1L, 2L), gate=X(2L))
+z <- CX12 * y
+z
+```
+
+which in this case is the `CNOT` gate again with control bit 1 and
+target bit 2. `cqgate` is a convenience function to generate a new S4
+object of S4 class `cqgate`. Note that a similar function `sqgate` is
+available. The `gate` argument to `cqgate` can be any `sqgate` object.
+
+Another widely used two-qubit gate is the `SWAP` gate
+
+```{r, fig.align="center"}
+z <- SWAP(c(1,2)) * y
+z
+plot(z)
+```
+
+The order of the bits supplied to `SWAP` is irrelevant, of course
+
+```{r, fig.align="center"}
+z <- SWAP(c(2,1)) * y
+z
+```
+
+Finally, there are also the controlled `CNOT` or Toffoli gate and the
+controlled `SWAP` gate available
+
+```{r, fig.align="center"}
+x <- H(1) *(H(2) * qstate(3))
+x
+y <- CCNOT(c(1,2,3)) * x
+y
+plot(y)
+```
+
+The arguments to `CCNOT` is a vector of three integers. The first two
+integers are the control bits, the last one the target bit.
+
+Similarly, the `CSWAP` gate
+
+```{r, fig.align="center"}
+y <- CSWAP(c(1,2,3)) * x
+y
+plot(y)
+```
+
+## Measurements
+
+At any point single qubits can be measured
+
+```{r, fig.align="center"}
+res <- measure(y, 3)
+res
+plot(res$psi)
+```
+
+In this case the third qubit is *measured* and its value is stored in
+`res$value`. The wave function of the quantum state collapses, the
+result of which is stored again as a `qstate` object in `res$psi`.
+
+Such a measurement can be repeated say 1000 times
+
+```{r, fig.align="center"}
+rv <- c()
+for(i in c(1:1000)) {
+  rv[i] <- measure(y, 3)$value
+}
+hist(rv, probability=TRUE)
+```
+
+# Export ot QASM
+
+IBM provides quantum computing platforms, which can be freely
+used. However, one needs to programme in python using the `qiskit`
+package. For convenience, `qsimulatR` can export a circuit translated
+to `qiskit`
+
+```{r}
+filename <- paste0(tempdir(), "/circuit.py")
+export2qasm(y, filename=filename)
+```
+
+which results in the following file
+
+```{r comment=''}
+cat(readLines(filename), sep = '\n')
+```
+
+which can be used at [quantum-computing.ibm.com](https://quantum-computing.ibm.com).

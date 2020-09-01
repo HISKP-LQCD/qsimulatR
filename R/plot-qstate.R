@@ -50,69 +50,71 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                 annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
               }
             }
-            ## plot gates
-            gatelist <- x@circuit$gatelist
-            for(i in c(1:ngates)) {
-              ## single qubit gates
-              if(is.na(gatelist[[i]]$bits[2])) {
-                type <- gatelist[[i]]$type
-                if(gatelist[[i]]$type == "Rz") {
-                  type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
-                }
-                legend(x=i, y=n+1-gatelist[[i]]$bits[1],
-                       type, xjust=0.5, yjust=0.5,
-                       x.intersp=-0.5, y.intersp=0.1,
-                       bg="white")
-              }
-              ## multi qubit gates
-              else {
-                if(!is.null(gatelist[[i]]$controlled)) {
-                  if(gatelist[[i]]$controlled) {
-                    type <- gatelist[[i]]$type
-                    if(gatelist[[i]]$type == "Rz") {
-                      type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
-                    }
-                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                    lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                    legend(x=i, y=n+1-gatelist[[i]]$bits[2],
-                           type, xjust=0.5, yjust=0.5,
-                           x.intersp=-0.5, y.intersp=0.1,
-                           bg="white")
+            if(ngates > 0) {
+              ## plot gates
+              gatelist <- x@circuit$gatelist
+              for(i in c(1:ngates)) {
+                ## single qubit gates
+                if(is.na(gatelist[[i]]$bits[2])) {
+                  type <- gatelist[[i]]$type
+                  if(gatelist[[i]]$type == "Rz") {
+                    type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                   }
-                }
-                if(gatelist[[i]]$type == "CNOT") {
-                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
-                  lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                }
-                if(gatelist[[i]]$type == "CCNOT") {
-                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
-                  lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
-                }
-                if(gatelist[[i]]$type == "SWAP") {
-                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=4, cex=2.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
-                  lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                }                
-                if(gatelist[[i]]$type == "CSWAP") {
-                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=1.5)
-                  points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=4, cex=2.5)
-                  lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
-                }
-                if(gatelist[[i]]$type == "measure") {
-                  lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
-                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                  legend(x=i, y=ncbits+1-gatelist[[i]]$bits[2],
-                         "M", xjust=0.5, yjust=0.5,
+                  legend(x=i, y=n+1-gatelist[[i]]$bits[1],
+                         type, xjust=0.5, yjust=0.5,
                          x.intersp=-0.5, y.intersp=0.1,
                          bg="white")
-                  arrows(x0=i-0.2, x1=i+0.2,
-                         y0=ncbits+1-gatelist[[i]]$bits[2]-0.2,
-                         y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
-                         length=0.1)
+                }
+                ## multi qubit gates
+                else {
+                  if(!is.null(gatelist[[i]]$controlled)) {
+                    if(gatelist[[i]]$controlled) {
+                      type <- gatelist[[i]]$type
+                      if(gatelist[[i]]$type == "Rz") {
+                        type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
+                      }
+                      points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                      lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+                      legend(x=i, y=n+1-gatelist[[i]]$bits[2],
+                             type, xjust=0.5, yjust=0.5,
+                             x.intersp=-0.5, y.intersp=0.1,
+                             bg="white")
+                    }
+                  }
+                  if(gatelist[[i]]$type == "CNOT") {
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
+                    lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+                  }
+                  if(gatelist[[i]]$type == "CCNOT") {
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
+                    lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
+                  }
+                  if(gatelist[[i]]$type == "SWAP") {
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=4, cex=2.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
+                    lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+                  }                
+                  if(gatelist[[i]]$type == "CSWAP") {
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
+                    points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=4, cex=2.5)
+                    lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
+                  }
+                  if(gatelist[[i]]$type == "measure") {
+                    lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                    legend(x=i, y=ncbits+1-gatelist[[i]]$bits[2],
+                           "M", xjust=0.5, yjust=0.5,
+                           x.intersp=-0.5, y.intersp=0.1,
+                           bg="white")
+                    arrows(x0=i-0.2, x1=i+0.2,
+                           y0=ncbits+1-gatelist[[i]]$bits[2]-0.2,
+                           y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
+                           length=0.1)
+                  }
                 }
               }
             }
