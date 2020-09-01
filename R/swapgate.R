@@ -62,7 +62,7 @@ setMethod("*", c("swapgate", "qstate"),
 
 #' The CSWAP gate
 #'
-#' This class represents a generic SWAP gate
+#' This class represents a generic SWAP gate, also called Fredkin gate
 #'
 #' @slot bits Integer vector of length 2. First two bits are the control bits,
 #'            third the target bit.

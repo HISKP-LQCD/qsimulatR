@@ -1,12 +1,23 @@
 #' export2qasm
+#'
+#' Export to IBM's QASM
+#' 
 #' @description
-#' export a circuit to IBM's QASM python
+#' export a circuit to IBM's QASM qiskit python format. Note that only
+#' gates can be exported where the correspondence is known to QASM
+#'
+#' @details
+#' Currently the following gates can be exported: H, X, Y, Z, S,
+#' Tgate, Rz, CNOT, SWAP, CCNOT, CSWAP, measure.
 #' 
 #' @param object a qstate object
 #' @param filename character. The filename of the textfile where to store the circuit
 #' @param append boolean. Whether or not to append to the file. For this the file has to exist.
 #'
 #' @include state.R
+#'
+#' @references
+#' https://qiskit.org/documentation/
 #' 
 #' @return
 #' nothing is returned, but a file is created.
