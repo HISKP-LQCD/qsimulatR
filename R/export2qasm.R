@@ -37,6 +37,7 @@ export2qasm <- function(object, filename="circuit.py", append=FALSE) {
       if(object@circuit$gatelist[[i]]$type == "CNOT") op <- paste0("cx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "SWAP") op <- paste0("swap(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "CCNOT") op <- paste0("ccx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ",", object@circuit$gatelist[[i]]$bits[3]-1, ")")
+      if(object@circuit$gatelist[[i]]$type == "CSWAP") op <- paste0("cswap(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ",", object@circuit$gatelist[[i]]$bits[3]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "measure") op <- paste0("measure([", object@circuit$gatelist[[i]]$bits[1]-1, "],[", object@circuit$gatelist[[i]]$bits[2]-1, "])")
       olines <- c(olines, paste0("qc.", op))
     }

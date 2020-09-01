@@ -96,6 +96,12 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                   points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
                   lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
                 }                
+                if(gatelist[[i]]$type == "CSWAP") {
+                  points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=1.5)
+                  points(x=i, y=n+1-gatelist[[i]]$bits[3], pch=4, cex=2.5)
+                  lines(x=c(i,i), y=n+1-range(gatelist[[i]]$bits))
+                }
                 if(gatelist[[i]]$type == "measure") {
                   lines(x=c(i,i), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
                   points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
