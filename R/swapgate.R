@@ -83,25 +83,19 @@ setClass("cswapgate",
 #' @export
 cswapgate <- function(bits=c(1, 2)) return(methods::new("cswapgate", bits=as.integer(bits)))
 
-#' The CSWAP or toffoli gate
+#' The CSWAP 
 #'
 #' @param bits integer vector of length two, the first bit being the control and the second
 #' the target bit.
 #'
-#' @aliases toffoli
 #' @return
 #' An S4 class 'cswapgate' object is returned
 #' @export
 CSWAP <- function(bits=c(1, 2, 3)) return(methods::new("cswapgate", bits=as.integer(bits)))
 
-#' @rdname CSWAP
-#' @aliases CSWAP
-#' @export
-toffoli <- function(bits=c(1, 2, 3)) return(methods::new("cswapgate", bits=as.integer(bits)))
-
 #' times-cswapgate-qstate
 #'
-#' Applies a CSWAP (or toffoli) gate to a quantum state.
+#' Applies a CSWAP gate to a quantum state.
 #'
 #' @param e1 object of S4 class 'cswapgate'
 #' @param e2 object of S4 class 'qstate'
