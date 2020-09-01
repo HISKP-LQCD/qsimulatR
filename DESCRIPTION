@@ -28,3 +28,12 @@ Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/HISKP-LQCD/qsimulatR
 BugReports: https://github.com/HISKP-LQCD/qsimulatR/issues
+Collate: 
+    'state.R'
+    'cnotgate.R'
+    'sqgate.R'
+    'cqgate.R'
+    'export2quasm.R'
+    'measure.R'
+    'plot-qstate.R'
+    'qsimulatR-package.R'
