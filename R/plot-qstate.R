@@ -66,6 +66,20 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
               }
               ## multi qubit gates
               else {
+                if(!is.null(gatelist[[i]]$controlled)) {
+                  if(gatelist[[i]]$controlled) {
+                    type <- gatelist[[i]]$type
+                    if(gatelist[[i]]$type == "Rz") {
+                      type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
+                    }
+                    points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+                    lines(x=c(i,i), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+                    legend(x=i, y=n+1-gatelist[[i]]$bits[2],
+                           type, xjust=0.5, yjust=0.5,
+                           x.intersp=-0.5, y.intersp=0.1,
+                           bg="white")
+                  }
+                }
                 if(gatelist[[i]]$type == "CNOT") {
                   points(x=i, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
                   points(x=i, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
