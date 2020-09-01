@@ -40,7 +40,6 @@ CNOT <- function(bits=c(1, 2)) return(methods::new("cnotgate", bits=as.integer(b
 #' @param e1 object of S4 class 'cnotgate'
 #' @param e2 object of S4 class 'qstate'
 #'
-#' @aliases "*"
 #' @return
 #' An object of S4 class 'qstate'
 setMethod("*", c("cnotgate", "qstate"),
@@ -80,7 +79,7 @@ setMethod("*", c("cnotgate", "qstate"),
 #' z <- CCNOT(c(1,2,3)) * (H(1) * x)
 #'
 #' @name ccnotgate
-#' @aliases toffoligate toffoli
+#'
 #' @rdname ccnotgate
 #' @aliases ccnotgate-class
 #' @exportClass ccnotgate
@@ -114,7 +113,6 @@ toffoli <- function(bits=c(1, 2, 3)) return(methods::new("ccnotgate", bits=as.in
 #' @param e1 object of S4 class 'ccnotgate'
 #' @param e2 object of S4 class 'qstate'
 #'
-#' @aliases "*"
 #' @return
 #' An object of S4 class 'qstate'
 setMethod("*", c("ccnotgate", "qstate"),
