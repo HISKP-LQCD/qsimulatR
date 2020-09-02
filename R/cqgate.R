@@ -7,7 +7,7 @@ check_cqgate  <- function(object) {
 
 #' A controlled single qubit gate
 #'
-#' This class represents a generic single qubit gate
+#' This class represents a generic controlled gate
 #'
 #' @slot bits Integer. Integer vector of bits. The first is the control bit, the second the target bit.
 #' @slot gate sqgate. The single qubit gate.
