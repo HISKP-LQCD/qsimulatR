@@ -2,6 +2,10 @@ check_sqgate  <- function(object) {
   stopifnot(length(object@bit) == 1)
   stopifnot(object@bit > 0)
   stopifnot(all(dim(object@M) == c(2,2)))
+  ## check unitarity
+  X <- as.vector(object@M %*% t(Conj(object@M)))
+  stopifnot(all(Re(X- c(1,0,0,1)) < 1.e-12))
+  stopifnot(all(Im(X- c(1,0,0,1)) < 1.e-12))
 }
 
 #' A single qubit gate
