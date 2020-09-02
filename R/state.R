@@ -31,10 +31,43 @@ check_qstate <- function(object) {
   stopifnot(1 == length(object@basis) || N == length(object@basis))
 }
 
-genStateString <- function(int, nbits, collapse="") {
+#' genStateNumber
+#'
+#' function to generate the bit representation for a specific basis state
+#'
+#' @param int integer number representing the basis state
+#' @param nbits integer. The number of qubits
+#'
+#' @return a integer vector of length `nbits`
+#' 
+#' @examples
+#' genStateNumber(5, 4)
+#' genStateNumber(2, 2)
+#'
+#' @export
+genStateNumber <- function(int, nbits) {
   x <- intToBits(int)
   i <- nbits:1
-  str <- paste0(ifelse(x[i] > 0, 1, 0), collapse=collapse)
+  return(ifelse(x[i] > 0, 1, 0))
+}
+
+#' genStateString
+#'
+#' function to generate the string for a specific basis state
+#'
+#' @param int integer number representing the basis state
+#' @param nbits integer. The number of qubits
+#' @param collapse character. String to fill in between separate bits
+#'
+#' @return a character
+#' 
+#' @examples
+#' genStateString(5, 4)
+#' genStateString(2, 2, collapse=">|")
+#'
+#' @export
+genStateString <- function(int, nbits, collapse="") {
+  str <- paste0(genStateNumber(int, nbits), collapse=collapse)
   str <- paste0("|", str, ">")
   return(str)
 }
