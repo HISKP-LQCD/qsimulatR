@@ -198,7 +198,7 @@ hist(rv, probability=TRUE, breaks=c(0, 0.5, 1),
 where we read of from the wave function that the ratio should be $3:1$
 for values $0$ and $1$, which is well reproduced.
 
-# Export ot QASM
+# Export ot Qsikit
 
 IBM provides quantum computing platforms, which can be freely
 used. However, one needs to programme in python using the `qiskit`
@@ -207,7 +207,7 @@ to `qiskit`
 
 ```{r}
 filename <- paste0(tempdir(), "/circuit.py")
-export2qasm(y, filename=filename)
+export2qiskit(y, filename=filename)
 ```
 
 which results in the following file
@@ -216,4 +216,6 @@ which results in the following file
 cat(readLines(filename), sep = '\n')
 ```
 
-which can be used at [quantum-computing.ibm.com](https://quantum-computing.ibm.com).
+which can be used at
+[quantum-computing.ibm.com](https://quantum-computing.ibm.com) to run
+on real quantum hardware.
