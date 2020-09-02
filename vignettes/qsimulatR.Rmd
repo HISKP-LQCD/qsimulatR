@@ -13,6 +13,8 @@ vignette: >
 ```{r echo=FALSE}
 library(knitr)
 library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
 ```
 
 # qsimulatR Package
@@ -160,7 +162,7 @@ plot(y)
 The arguments to `CCNOT` is a vector of three integers. The first two
 integers are the control bits, the last one the target bit.
 
-Similarly, the `CSWAP` gate
+Similarly, the `CSWAP` or Fredkin gate
 
 ```{r, fig.align="center"}
 y <- CSWAP(c(1,2,3)) * x
@@ -173,7 +175,7 @@ plot(y)
 At any point single qubits can be measured
 
 ```{r, fig.align="center"}
-res <- measure(y, 3)
+res <- measure(y, 1)
 res
 plot(res$psi)
 ```
@@ -182,15 +184,19 @@ In this case the third qubit is *measured* and its value is stored in
 `res$value`. The wave function of the quantum state collapses, the
 result of which is stored again as a `qstate` object in `res$psi`.
 
-Such a measurement can be repeated say 1000 times
+Such a measurement can be repeated, say 1000 times, for qubit 3
 
 ```{r, fig.align="center"}
 rv <- c()
 for(i in c(1:1000)) {
   rv[i] <- measure(y, 3)$value
 }
-hist(rv, probability=TRUE)
+hist(rv, probability=TRUE, breaks=c(0, 0.5, 1),
+     main="Probability for Qubit 3", xlab="value")
 ```
+
+where we read of from the wave function that the ratio should be $3:1$
+for values $0$ and $1$, which is well reproduced.
 
 # Export ot QASM
 
