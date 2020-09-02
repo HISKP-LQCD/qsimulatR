@@ -25,7 +25,7 @@ Suggests:
 License: GPL-3 + file LICENSE
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/HISKP-LQCD/qsimulatR
