@@ -102,10 +102,24 @@ z
 The argument `M` must be a unitary $2\times 2$ complex valued matrix,
 which in this case is the third Pauli matrix predefined as `Z`.
 
+### Truth Table
+
+Sometimes it is useful to look at the quantum analogon of a truth table of a gate as it immediately shows how every qubit is influenced depending on the other qubits. It can provide a consistency check for a newly implemented gate, too. The truth table of a single qubit gate (here the `X` gate) can be obtained as follows
+
+```{r}
+truth.table(X, 1)
+```
+
 ## Multi-qubit gates
 
 The most important two-qubit gate is the controlled `NOT` or `CNOT`
-gate. It can for instance be used as follows to generate a Bell state
+gate. It has the truth table
+
+```{r}
+truth.table(CNOT, 2)
+```
+
+and can for instance be used as follows to generate a Bell state
 
 ```{r}
 z <- CNOT(c(1,2)) * y
@@ -168,6 +182,33 @@ Similarly, the `CSWAP` or Fredkin gate
 y <- CSWAP(c(1,2,3)) * x
 y
 plot(y)
+```
+
+## Multi-gate circuits as functions
+
+You might want to use specific circuits of several gates more than once and therefore find it tedious to type it completely every time you use it. Defining a new gate combining all of the operations might not be as easy either. In these cases we find it convenient to define generating functions of the form
+
+```{r}
+myswap <- function(bits){
+	function(x){
+		CNOT(bits) * (CNOT(rev(bits)) * (CNOT(bits) * x))
+	}
+}
+```
+
+where an outer function takes any required information concerning the circuit. It then returns a function that applies given circuit to a state.
+
+Our example above implements a `SWAP` using only `CNOT` gates as can be checked with the truth table:
+
+```{r}
+truth.table(myswap, 2)
+```
+
+We can plot the circuit in the way we are used to as well.
+
+```{r}
+circuit <- myswap(1:2)
+plot(circuit(qstate(2)))
 ```
 
 ## Measurements
