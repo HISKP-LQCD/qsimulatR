@@ -1,0 +1,4 @@
+#!/bin/bash
+
+Rscript -e "library(methods); devtools::document()"
+R CMD INSTALL .
