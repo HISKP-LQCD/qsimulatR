@@ -79,11 +79,12 @@ truth.line <- function(i, gate, nbits) {
   out <- gate * x
   k <- which(abs(out@coefs) > eps)
   out.bits <- rbind(sapply(k-1, genStateNumber, nbits=nbits))
-  out.num <- apply(out.bits, 1, function(bits){
+  out.num <- apply(X=out.bits, MARGIN=1,
+                   FUN=function(bits){
                      if(all(as.logical(bits))) return(1)
                      else if(!any(as.logical(bits))) return(0)
                      else return(NA)
-                  })
+                   })
 
   return(c(genStateNumber(i-1, nbits), out.num))
 }
@@ -93,11 +94,13 @@ truth.line <- function(i, gate, nbits) {
 #' @rdname truth-table
 #'
 #' @details calculates the quantum truth table of the gate `e1`.
-#' If a basis state is transformed to a superposition of basis states by the gate, the result is NA.
+#' If a basis state is transformed to a superposition of basis states by
+#' the gate, the result is 'NA'.
 #'
 #' @param e1 gate to measure.
 #' @param nbits number of bits the gate acts on.
 #' @param bits optional vector of length `nbits` containing the qubit order in the gate.
+#' @param ... additional parameters to passed be on to 'e1'
 #'
 #' @return
 #' returns a data.frame containing the truth table. Each row corresponds
@@ -116,18 +119,19 @@ truth.line <- function(i, gate, nbits) {
 #' truth.table(cqgate, 2, gate=H(2))
 #' 
 #' @exportMethod truth.table
-setGeneric("truth.table", function(e1, nbits, bits, ...) {
+setGeneric("truth.table",
+           function(e1, nbits, bits, ...) {
              stopifnot(!missing(nbits) || !missing(bits))
              if(missing(bits)) bits <- 1:nbits
              else nbits <- length(bits)
-
+             
              gate <- e1(bits, ...)
-
-             tab <- sapply(1:(2^nbits), truth.line, gate=gate, nbits=nbits)
-
+             
+             tab <- sapply(X=1:(2^nbits), FUN=truth.line, gate=gate, nbits=nbits)
+             
              res <- as.data.frame(t(tab))
-             names(res)[1:nbits]             <- paste0(rep("In", nbits),  (nbits-1):0)
-             names(res)[(nbits+1):(2*nbits)] <- paste0(rep("Out", nbits), (nbits-1):0)
+             names(res)[1:nbits]             <- paste0(rep("In", nbits),  (nbits):1)
+             names(res)[(nbits+1):(2*nbits)] <- paste0(rep("Out", nbits), (nbits):1)
              return(res)
-          }
-)
+           }
+           )
