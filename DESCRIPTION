@@ -22,7 +22,9 @@ Imports:
     methods,
     stats
 Suggests:
-    knitr
+    knitr,
+    markdown,
+    rmarkdown
 License: GPL-3 + file LICENSE
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
