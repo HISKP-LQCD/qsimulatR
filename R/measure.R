@@ -74,9 +74,14 @@ truth.line <- function(i, gate, nbits) {
   eps <- 1e-14
   s <- rep(0, 2^nbits)
   s[i] <- 1
-
   x <- qstate(nbits, coefs=s)
-  out <- gate * x
+
+  ## gate could be something more complicated than a default gate with overloaded '*'
+  if(is.function(gate)){
+    out <- gate(x)
+  }else{
+    out <- gate * x
+  }
   k <- which(abs(out@coefs) > eps)
   out.bits <- rbind(sapply(k-1, genStateNumber, nbits=nbits))
   out.num <- apply(X=out.bits, MARGIN=1,
@@ -117,6 +122,9 @@ truth.line <- function(i, gate, nbits) {
 #' truth.table(CNOT, bits=2:1)
 #' ## for a general controlled gate
 #' truth.table(cqgate, 2, gate=H(2))
+#' ## for an arbitrary circuit (here a swap implementation using only CNOTs)
+#' myswap <- function(bits){ function(x){ CNOT(bits) * (CNOT(rev(bits)) * (CNOT(bits) * x))}}
+#' truth.table(myswap, 2)
 #' 
 #' @exportMethod truth.table
 setGeneric("truth.table",
@@ -130,8 +138,8 @@ setGeneric("truth.table",
              tab <- sapply(X=1:(2^nbits), FUN=truth.line, gate=gate, nbits=nbits)
              
              res <- as.data.frame(t(tab))
-             names(res)[1:nbits]             <- paste0(rep("In", nbits),  (nbits):1)
-             names(res)[(nbits+1):(2*nbits)] <- paste0(rep("Out", nbits), (nbits):1)
+             names(res)[1:nbits]             <- paste0(rep("In", nbits),  nbits:1)
+             names(res)[(nbits+1):(2*nbits)] <- paste0(rep("Out", nbits), nbits:1)
              return(res)
            }
            )
