@@ -239,7 +239,7 @@ hist(rv, probability=TRUE, breaks=c(0, 0.5, 1),
 where we read of from the wave function that the ratio should be $3:1$
 for values $0$ and $1$, which is well reproduced.
 
-# Export ot Qsikit
+# Export ot Qiskit
 
 IBM provides quantum computing platforms, which can be freely
 used. However, one needs to programme in python using the `qiskit`
