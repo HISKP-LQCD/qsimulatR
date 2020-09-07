@@ -1,7 +1,7 @@
 Package: qsimulatR
-Version: 0.1
-Date: 2020-05-05
-Title: A quantum computer simulator in R
+Version: 1.0
+Date: 2020-09-03
+Title: A Quantum Computer Simulator in R
 Authors@R: 
     c(person(given = "Johann",
              family = "Ostmeyer",
@@ -14,10 +14,10 @@ Authors@R:
 Description: A quantum computer simulator framework. It allows to
     define general single qubit gates and general controlled single
     qubit gates. For convenience, it currently provides the
-    most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT, SWAP, toffoli or
-    CCNOT, CSWAP). qsimulatR supports plotting of circuits and is able to
-    export circuits into IBM's Qsikit python language, which can be
-    run on IBM's hardware.
+    most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT, SWAP, Toffoli or
+    CCNOT, Fredkin or CSWAP). qsimulatR supports plotting of circuits and is able to
+    export circuits to Qsikit <https://qiskit.org/>, a python package
+    which can be used to run on IBM's hardware <https://quantum-computing.ibm.com/>.
 Imports:
     methods,
     stats
