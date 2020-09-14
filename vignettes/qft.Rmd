@@ -22,17 +22,18 @@ knitr::opts_chunk$set(fig.align='center',
 Let's take a normalised vector with eight components and Fourier transform it
 
 ```{r}
-v <- seq(1:8)
+N <- 3
+v <- seq(1:2^N)
 v <- v/sqrt(sum(v^2))
 #v <- c(1, rep(0, 7))
 w <- fft(v)
-w
+w/sqrt(length(w))
 ```
 
 The same using the quantum Fourier Trafo
 
 ```{r}
-y <- qstate(3, coefs=as.complex(v))
+y <- qstate(N, coefs=as.complex(rev(v)))
 x <- H(1) * y
 x <- cqgate(bits=c(2L, 1L), gate=S(1L)) * x
 x <- cqgate(bits=c(3L, 1L), gate=Tgate(1L)) * x
@@ -52,7 +53,7 @@ transform of the coefficients of `y`.
 
 ```{r}
 x@coefs
-sum(x@coefs^2)
+sum(x@coefs*Conj(x@coefs))
 ```
 
 hmpf.
