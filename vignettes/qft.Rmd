@@ -1,0 +1,58 @@
+---
+title: "Quantum Fourier Trafo"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{qft}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
+```
+
+# Three qubit QFT
+
+Let's take a normalised vector with eight components and Fourier transform it
+
+```{r}
+v <- seq(1:8)
+v <- v/sqrt(sum(v^2))
+#v <- c(1, rep(0, 7))
+w <- fft(v)
+w
+```
+
+The same using the quantum Fourier Trafo
+
+```{r}
+y <- qstate(3, coefs=as.complex(v))
+x <- H(1) * y
+x <- cqgate(bits=c(2L, 1L), gate=S(1L)) * x
+x <- cqgate(bits=c(3L, 1L), gate=Tgate(1L)) * x
+x <- H(2) * x
+x <- cqgate(bits=c(3L, 2L), gate=S(2L)) * x
+x <- H(3) * x
+x <- SWAP(c(1,3)) * x
+```
+
+
+```{r}
+plot(x)
+```
+
+Now the coefficients of the state `x` should be the the Fourier
+transform of the coefficients of `y`.
+
+```{r}
+x@coefs
+sum(x@coefs^2)
+```
+
+hmpf.
