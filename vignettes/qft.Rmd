@@ -26,11 +26,11 @@ N <- 3
 v <- seq(1:2^N)
 v <- v/sqrt(sum(v^2))
 
-w <- fft(v)
-w/sqrt(length(w))
+w <- fft(v)/sqrt(length(v))
 ```
 
-The same using the quantum Fourier Trafo
+The same using the quantum Fourier Trafo. Note that we have to start
+with the most significant bit, which in this case is qubit 3.
 
 ```{r}
 y <- qstate(N, coefs=as.complex(v))
@@ -43,6 +43,7 @@ x <- H(1) * x
 x <- SWAP(c(1,3)) * x
 ```
 
+The corresponding circuit looks as follows
 
 ```{r}
 plot(x)
@@ -55,16 +56,16 @@ transform of the coefficients of `y`. The QFT is unitary
 sum(x@coefs*Conj(x@coefs))
 ```
 
-and the coefficients match the one from the classical FFT
+and the coefficients match the one from the classical FFT up to re-ordering
 
 ```{r}
-x@coefs
+sqrt(sum((w - x@coefs)*Conj(w - x@coefs)))
 ```
 
 # The inverse
 
-Since the Hadamard gate is its own inverse, we can write the inverse
-QFT as follows, again for three qubits
+Since the Hadamard gate is its own inverse, we need the hermitian
+conjugates for `T` and `S`
 
 ```{r}
 Tdagger <- function(bit) {
@@ -79,7 +80,12 @@ Sdagger <- function(bit) {
                       M=array(as.complex(c(1,0,0,-1i)), dim=c(2,2)),
                       type="Sdag"))
 }
+```
 
+With these we can write the inverse
+QFT as follows, again for three qubits
+
+```{r}
 z <- qstate(N, coefs=x@coefs)
 z <- SWAP(c(1,3)) * z
 z <- H(1) * z
@@ -97,6 +103,5 @@ plot(z)
 The coefficients can be compared with the original vector we started from
 
 ```{r}
-v
-z@coefs
+sqrt(sum((v - z@coefs)*Conj(v - z@coefs)))
 ```
