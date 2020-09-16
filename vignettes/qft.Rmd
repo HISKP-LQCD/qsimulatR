@@ -136,3 +136,58 @@ Again we get the vector `v` back we started with.
 ```{r}
 sqrt(sum((v - y@coefs)*Conj(v - y@coefs)))
 ```
+
+## The general case
+
+Let define a function performing a quanturm Fourier trafo for general
+number of qubits. For this we need a gate representing
+\[
+R_k = 
+\begin{pmatrix}
+1 & 0 \\
+0 & \exp(2\pi \mathrm{i}/2^k) \\
+\end{pmatrix}
+\]
+Such a general gate is easily implemented in `qsimulatR` as follows
+
+```{r}
+Ri <- function(bit, i, sign=+1) {
+  return(methods::new("sqgate",
+                      bit=as.integer(bit),
+                      M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))),
+                              dim=c(2,2)), type=paste0("R", i)))
+}
+```
+
+With this gate we can implement the quantum Fourier trafo function
+
+```{r}
+qft <- function(x, inverse=FALSE) {
+  n <- x@nbits
+  y <- x
+  sign <- +1
+  if(inverse) sign <- -1
+  for(bit in c(n:1)) {
+    y <- H(bit) * y
+    if(bit > 1) {
+      for(i in c((bit-1):1)) {
+        y <- cqgate(bits=c(i, bit), gate=Ri(bit, bit-(i-1), sign=sign)) * y
+      }
+    }
+  }
+  ## reverse order
+  for(k in c(1:floor(n/2))) {
+    y <- SWAP(c(k, n-(k-1))) * y
+  }
+  return(invisible(y))
+}
+```
+
+And we can plot and check the result again
+
+```{r}
+y <- qstate(N, coefs=x@coefs)
+y <- qft(y, inverse=TRUE)
+plot(y)
+sqrt(sum((v - y@coefs)*Conj(v - y@coefs)))
+```
