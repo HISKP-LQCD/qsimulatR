@@ -42,27 +42,31 @@ u_\pm\ =\
 
 ## Phase Estimation
 
-We start with qubit 1 in state $u_+$ and use $t=4$ in the second
-register
+We start with qubit 1 in state $u_+$ and use
+```{r}
+t=4
+```
+
+in the second register
 
 ```{r}
-x <- S(1) * (H(1) * qstate(5))
+x <- S(1) * (H(1) * qstate(t+1))
 ```
 
 And we define the gate corresponding to $U$
 
 ```{r}
-alpha <- pi/4
+alpha <- pi*3/8
 s <- sin(alpha)
 c <- cos(alpha)
 M <- array(as.complex(c(c, s, -s, c)), dim=c(2,2))
 Uf <- sqgate(bit=1, M=M, type=paste0("Uf"))
 ```
 
-Now we apply the Hadamard gate to qubits 2-5
+Now we apply the Hadamard gate to qubits 2,\dots,t+1
 
 ```{r}
-for(i in c(2:5)) {
+for(i in c(2:(t+1))) {
   x <- H(i) * x
 }
 ```
@@ -70,7 +74,7 @@ for(i in c(2:5)) {
 and the controlled $U_f$
 
 ```{r}
-for(i in c(2:5)) {
+for(i in c(2:(t+1))) {
   x <- cqgate(bits=c(i, 1),
               gate=sqgate(bit=1,
                           M=M, type=paste0("Uf", 2^(i-2)))) * x
@@ -82,7 +86,7 @@ plot(x)
 Next we apply the inverse Fourier transformation
 
 ```{r}
-x <- qft(x, inverse=TRUE, bits=c(2:5))
+x <- qft(x, inverse=TRUE, bits=c(2:(t+1)))
 plot(x)
 ```
 
@@ -91,7 +95,7 @@ and measure
 ```{r}
 cbits <- c()
 phi <- 0.
-reg <- c(2:5)
+reg <- c(2:(t+1))
 for(i in seq_along(reg)) {
   cbits[i] <- measure(x, reg[i])$value
 }
@@ -100,7 +104,11 @@ for(i in seq_along(reg)) {
   phi <- phi + cbits[i]/2^(N-i+1)
 }
 
+phi.plus <- 2*pi*phi
+phi.minus <- 2*pi*(1-phi)
+
 cbits
-phi
+phi.plus
+phi.minus
 alpha
 ```
