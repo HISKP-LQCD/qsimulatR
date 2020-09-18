@@ -85,7 +85,7 @@ plot(x)
 
 Next we apply the inverse Fourier transformation
 
-```{r}
+```{r, fig.width=9, fig.height=4}
 x <- qft(x, inverse=TRUE, bits=c(2:(t+1)))
 plot(x)
 ```
