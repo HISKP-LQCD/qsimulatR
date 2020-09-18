@@ -1,0 +1,138 @@
+---
+title: "Phase Estimation Algorithm"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{phase-estimation}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
+```
+
+## Rotation Matrix
+
+```{r, echo=FALSE}
+Ri <- function(bit, i, sign=+1) {
+  type <- paste0("R", i)
+  if(sign < 0) {
+    type <- paste0("R", i, "dag")
+  }
+  return(methods::new("sqgate",
+                      bit=as.integer(bit),
+                      M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))),
+                              dim=c(2,2)), type=type))
+}
+qft <- function(x, inverse=FALSE, bits) {
+  n <- x@nbits
+  if(missing(bits)) bits <- c(1:n)
+  else stopifnot((length(bits) <= n) && all(bits <= n))
+  
+  y <- x
+  sign <- +1
+  if(inverse) sign <- -1
+  for(bit in rev(seq_along(bits))) {
+    y <- H(bits[bit]) * y
+    if(bit > 1) {
+      for(i in c((bit-1):1)) {
+        y <- cqgate(bits=c(bits[i], bits[bit]), gate=Ri(bits[i], bit-(i-1), sign=sign)) * y
+      }
+    }
+  }
+  ## reverse order
+  n <- length(bits)
+  for(k in c(1:floor(n/2))) {
+    y <- SWAP(c(bits[k], bits[n-(k-1)])) * y
+  }
+  return(invisible(y))
+}
+```
+
+We use a rotation matrix
+\[
+U\ =\ \begin{pmatrix}
+c & s \\
+-s & c \\
+\end{pmatrix}
+\]
+with $c=\cos(\alpha)$, $s=\sin(\alpha)$ and a real-valued angle
+$\alpha$ as an example. $U$ has eigenvalues
+\[
+\lambda_\pm\ =\ c\pm \mathrm{i} s\,.
+\]
+The corresponding eigenvectors are of the form
+\[
+u_\pm\ =\
+\begin{pmatrix}
+1 \\
+\mp\mathrm{i}\\
+\end{pmatrix}\,.
+\]
+
+## Phase Estimation
+
+We start with qubit 1 in state $u_+$ and use $t=4$ in the second
+register
+
+```{r}
+x <- S(1) * (H(1) * qstate(5))
+```
+
+And we define the gate corresponding to $U$
+
+```{r}
+alpha <- pi/4
+s <- sin(alpha)
+c <- cos(alpha)
+M <- array(as.complex(c(c, s, -s, c)), dim=c(2,2))
+Uf <- sqgate(bit=1, M=M, type=paste0("Uf"))
+```
+
+Now we apply the Hadamard gate to qubits 2-5
+
+```{r}
+for(i in c(2:5)) {
+  x <- H(i) * x
+}
+```
+
+```{r}
+for(i in c(2:5)) {
+  x <- cqgate(bits=c(i, 1),
+              gate=sqgate(bit=1,
+                          M=M, type=paste0("Uf", 2^(i-2)))) * x
+  M <- M %*% M
+}
+plot(x)
+```
+
+```{r}
+x <- qft(x, inverse=TRUE, bits=c(2:5))
+plot(x)
+```
+
+Now we measure
+
+```{r}
+cbits <- c()
+phi <- 0.
+reg <- c(2:5)
+for(i in seq_along(reg)) {
+  cbits[i] <- measure(x, reg[i])$value
+}
+N <- length(reg)
+for(i in seq_along(reg)) {
+  phi <- phi + cbits[i]/2^(N-i+1)
+}
+
+cbits
+phi
+alpha
+```
