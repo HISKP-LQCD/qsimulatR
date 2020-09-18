@@ -152,9 +152,9 @@ Such a general gate is easily implemented in `qsimulatR` as follows
 
 ```{r}
 Ri <- function(bit, i, sign=+1) {
-  type=paste0("R", i)
+  type <- paste0("R", i)
   if(sign < 0) {
-    type=paste0("R", i, "dag")
+    type <- paste0("R", i, "dag")
   }
   return(methods::new("sqgate",
                       bit=as.integer(bit),
