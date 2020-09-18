@@ -41,5 +41,6 @@ Collate:
     'export2qiskit.R'
     'measure.R'
     'plot-qstate.R'
+    'qft.R'
     'qsimulatR-package.R'
     'swapgate.R'

@@ -122,6 +122,38 @@ Id <- function(bit) {
 Rz <- function(bit, theta=0.) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2)), type="Rz"))
 }
+
+#' The Ri gate
+#'
+#' @param bit integer. The bit to which to apply the gate
+#' @param i integer
+#' @param sign integer
+#'
+#' @examples
+#' x <- X(1) * qstate(nbits=2)
+#' z <- Ri(1, i=2) * x
+#' z
+#'
+#' @details
+#' Implements the gate
+#' ( 1   0                )
+#' ( 0   exp(+-2*pi*1i/2^i) )
+#'
+#' If 'sign < 0', the inverse of the exponential is used.
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Ri <- function(bit, i, sign=+1) {
+  type <- paste0("R", i)
+  if(sign < 0) {
+    type <- paste0("R", i, "dag")
+  }
+  return(methods::new("sqgate",
+                      bit=as.integer(bit),
+                      M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))),
+                              dim=c(2,2)), type=type))
+}
 #' The S gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
