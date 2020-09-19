@@ -36,30 +36,47 @@ The corresponding eigenvectors are of the form
 u_\pm\ =\
 \begin{pmatrix}
 1 \\
-\mp\mathrm{i}\\
+\pm\mathrm{i}\\
 \end{pmatrix}\,.
 \]
 
 ## Phase Estimation
 
-We start with qubit 1 in state $u_+$ and use
+We use
+
 ```{r}
-t=4
+t=6
 ```
 
-in the second register
+in the second register which allows us with probability $1-\epsilon$ to get the 
+correct phase up to $t-\left\lceil \log\left(2+\frac{1}{2\epsilon}\right)\right\rceil$
+digits. Let us choose
+
+```{r}
+epsilon <- 1/4
+digits <- t-ceiling(log(2+1/(2*epsilon))/log(2)) # note the log in base-2
+digits
+```
+
+and therefore expect an error of less than
+
+```{r}
+2^(-digits)
+```
+
+We start with qubit 1 in state $u_+$
 
 ```{r}
 x <- S(1) * (H(1) * qstate(t+1))
 ```
 
-And we define the gate corresponding to $U$
+and we define the gate corresponding to $U$
 
 ```{r}
-alpha <- pi*3/8
+alpha <- pi*3/7
 s <- sin(alpha)
 c <- cos(alpha)
-M <- array(as.complex(c(c, s, -s, c)), dim=c(2,2))
+M <- array(as.complex(c(c, -s, s, c)), dim=c(2,2)) # note that R fills the matrix columns first
 Uf <- sqgate(bit=1, M=M, type=paste0("Uf"))
 ```
 
@@ -104,11 +121,14 @@ for(i in seq_along(reg)) {
   phi <- phi + cbits[i]/2^(N-i+1)
 }
 
-phi.plus <- 2*pi*phi
-phi.minus <- 2*pi*(1-phi)
-
 cbits
-phi.plus
-phi.minus
-alpha
+phi
 ```
+
+We find that usually
+
+```{r}
+phi-alpha/(2*pi)
+```
+
+is indeed smaller than the maximal deviation we expected.
