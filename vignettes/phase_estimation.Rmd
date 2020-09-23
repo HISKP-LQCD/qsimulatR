@@ -54,7 +54,8 @@ digits. Let us choose
 
 ```{r}
 epsilon <- 1/4
-digits <- t-ceiling(log(2+1/(2*epsilon))/log(2)) # note the log in base-2
+## note the log in base-2
+digits <- t-ceiling(log(2+1/(2*epsilon))/log(2)) 
 digits
 ```
 
@@ -76,7 +77,8 @@ and we define the gate corresponding to $U$
 alpha <- pi*3/7
 s <- sin(alpha)
 c <- cos(alpha)
-M <- array(as.complex(c(c, -s, s, c)), dim=c(2,2)) # note that R fills the matrix columns first
+## note that R fills the matrix columns first
+M <- array(as.complex(c(c, -s, s, c)), dim=c(2,2)) 
 Uf <- sqgate(bit=1, M=M, type=paste0("Uf"))
 ```
 
@@ -107,14 +109,20 @@ x <- qft(x, inverse=TRUE, bits=c(2:(t+1)))
 plot(x)
 ```
 
-and measure
+$x$ is now the state
+$|\tilde\varphi\rangle|u\rangle$. $\tilde\varphi\rangle$ is not neccessarily
+a pure state. The next step is a projective measurement of
+$|\tilde\varphi\rangle$
 
 ```{r}
 cbits <- c()
 phi <- 0.
 reg <- c(2:(t+1))
+xtmp <- x
 for(i in seq_along(reg)) {
-  cbits[i] <- measure(x, reg[i])$value
+  tmp <- measure(xtmp, reg[i])
+  cbits[i] <- tmp$value
+  xtmp <- tmp$psi
 }
 N <- length(reg)
 for(i in seq_along(reg)) {
@@ -131,4 +139,5 @@ We find that usually
 phi-alpha/(2*pi)
 ```
 
-is indeed smaller than the maximal deviation we expected.
+is indeed smaller than the maximal deviation $2^{-\mathrm{digits}}=$
+`r 2^(-digits)` we expect.
