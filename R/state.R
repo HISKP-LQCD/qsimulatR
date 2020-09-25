@@ -25,7 +25,7 @@ normalise <- function(x) {
 
 check_qstate <- function(object) {
   stopifnot(object@nbits > 0)
-  stopifnot(object@nbits <= 16)
+  stopifnot(object@nbits <= 24)
   N <- 2^object@nbits
   stopifnot(N == length(object@coefs))
   stopifnot(1 == length(object@basis) || N == length(object@basis))
