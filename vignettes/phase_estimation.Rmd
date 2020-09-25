@@ -68,7 +68,7 @@ and therefore expect an error of less than
 We start with qubit 1 in state $u_+$
 
 ```{r}
-x <- S(1) * (H(1) * qstate(t+1))
+x <- S(1) * (H(1) * qstate(t+1, basis=""))
 ```
 
 and we define the gate corresponding to $U$
@@ -115,21 +115,11 @@ a pure state. The next step is a projective measurement of
 $|\tilde\varphi\rangle$
 
 ```{r}
-cbits <- c()
-phi <- 0.
-reg <- c(2:(t+1))
-xtmp <- x
-for(i in seq_along(reg)) {
-  tmp <- measure(xtmp, reg[i])
-  cbits[i] <- tmp$value
-  xtmp <- tmp$psi
-}
-N <- length(reg)
-for(i in seq_along(reg)) {
-  phi <- phi + cbits[i]/2^(N-i+1)
-}
+xtmp <- measure(x)
+cbits <- genStateNumber(which(xtmp@coefs==1), t+1)
+phi <- sum(cbits[1:t]/2^(1:t))
 
-cbits
+cbits[1:t]
 phi
 ```
 
