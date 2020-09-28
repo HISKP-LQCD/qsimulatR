@@ -102,7 +102,7 @@ for(i in c(2:(t+1))) {
 plot(x)
 ```
 
-Next we apply the inverse Fourier transformation
+Next we apply the inverse Fourier transform
 
 ```{r, fig.width=9, fig.height=4}
 x <- qft(x, inverse=TRUE, bits=c(2:(t+1)))
@@ -116,13 +116,14 @@ $|\tilde\varphi\rangle$
 
 ```{r}
 xtmp <- measure(x)
-cbits <- genStateNumber(which(xtmp@coefs==1), t+1)
+cbits <- genStateNumber(which(xtmp@coefs==1)-1, t+1)
 phi <- sum(cbits[1:t]/2^(1:t))
 
 cbits[1:t]
 phi
 ```
 
+Note that we can measure the complete state, because $|u\rangle$ is not entangled to the rest.
 We find that usually
 
 ```{r}
@@ -130,4 +131,11 @@ phi-alpha/(2*pi)
 ```
 
 is indeed smaller than the maximal deviation $2^{-\mathrm{digits}}=$
-`r 2^(-digits)` we expect.
+`r 2^(-digits)` we expect. The distribution of probabilities over the
+states in $|\tilde\varphi\rangle$ is given as follows (factor 2 from
+dropping $|u\rangle$)
+
+```{r}
+plot(2*abs(x@coefs[seq(1,128,2)])^2, type="l",
+     ylab="p", xlab="state index")
+```
