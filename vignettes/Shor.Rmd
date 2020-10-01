@@ -77,7 +77,7 @@ factoring <- function(n) {
     if(!is.na(r)) {
       if((r %% 2) == 0) {
         l <- gcd(m^(r/2)-1, n)
-        if(l > 1) return(l)
+        if(l > 1 && l < n) return(l)
       }
     }
   }
