@@ -1,0 +1,87 @@
+---
+title: "Shor's factoring algorithm"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{Shor}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
+```
+
+# Factoring Algorithm
+
+Given an integer $n$, the factoring algorithm determines $p, q$ such
+that $n=pq$ or it shows that such a factorisation does not exist. We
+assume $p,q\neq 1$.
+
+1. Choose $m, 1\leq m \leq n$ uniformnly random.
+2. Find the order $r$ of $m$ modulo $n$.
+3. If $r$ is even, compute $l=\mathrm{gcd}(m^{r/2}-1, n)$
+4. If $l>1$ then $l$ is a factor of $n$. Otherwise, or if $r$ is odd
+   start with 1 for another value of $m$.
+
+## Greatest common divisor
+
+Euclid described a classical algorithms for finding the greatest
+common divisor (gcd) of two positive integers $m > n$.
+It may be implemented recursively as follows:
+
+```{r}
+gcd <- function(m, n) {
+  if(m < n) {
+    return(gcd(m=n, n=m))
+  }
+  r <- m %% n
+  if(r == 0) return(n)
+  return(gcd(m=n, n=r))
+}
+```
+
+## Order finding
+
+Another ingredient is the order finding algorithm, which we are also
+going to solve classically here.
+
+```{r}
+findOrder <- function(x, n) {
+  stopifnot(x < n && x > 0)
+  tmp <- x
+  for(r in c(1:(n-1))) {
+    if((tmp %% n) == 1) return(r)
+    tmp <- (tmp*x) %% n
+  }
+  return(NA)
+}
+```
+
+## Factoring
+
+```{r}
+factoring <- function(n) {
+  for(i in c(1:20)){
+    ## generate random number
+    m <- sample.int(n=n-1, size=1)
+    cat("m=", m, "\n")
+    ## find the order of m modulo n
+    r <- findOrder(x=m, n=n)
+    cat("r=", r, "\n")
+    if(!is.na(r)) {
+      if((r %% 2) == 0) {
+        l <- gcd(m^(r/2)-1, n)
+        if(l > 1) return(l)
+      }
+    }
+  }
+  cat("could not find a factor!\n")
+  return(NA)
+}
+```
