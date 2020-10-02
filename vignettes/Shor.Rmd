@@ -17,13 +17,17 @@ knitr::opts_chunk$set(fig.align='center',
                       comment='')
 ```
 
+In order to break RSA cryptography one needs to be able to factorise a
+large integer $n$, which is known to be the product of two prime
+numbers $n=p q$. 
+
 # Factoring Algorithm
 
 Given an integer $n$, the factoring algorithm determines $p, q$ such
 that $n=pq$ or it shows that such a factorisation does not exist. We
 assume $p,q\neq 1$.
 
-1. Choose $m, 1\leq m \leq n$ uniformnly random.
+1. Choose $m, 1\leq m \leq n$ uniformnly random with $m$ co-prime to $n$.
 2. Find the order $r$ of $m$ modulo $n$.
 3. If $r$ is even, compute $l=\mathrm{gcd}(m^{r/2}-1, n)$
 4. If $l>1$ then $l$ is a factor of $n$. Otherwise, or if $r$ is odd
@@ -31,7 +35,7 @@ assume $p,q\neq 1$.
 
 ## Greatest common divisor
 
-Euclid described a classical algorithms for finding the greatest
+Euclid described a classical algorithm for finding the greatest
 common divisor (gcd) of two positive integers $m > n$.
 It may be implemented recursively as follows:
 
@@ -49,35 +53,41 @@ gcd <- function(m, n) {
 ## Order finding
 
 Another ingredient is the order finding algorithm, which we are also
-going to solve classically here.
+going to solve classically here, actually with the most naive algorithm
 
 ```{r}
 findOrder <- function(x, n) {
   stopifnot(x < n && x > 0)
-  tmp <- x
-  for(r in c(1:(n-1))) {
-    if((tmp %% n) == 1) return(r)
+  tmp <- x %% n
+  for(r in c(1:n)) {
+    if(tmp == 1) return(r)
     tmp <- (tmp*x) %% n
   }
+  if(tmp == 1) return(r)
   return(NA)
 }
 ```
 
 ## Factoring
 
+Shor's algorithms can be implemented as follows
+
 ```{r}
 factoring <- function(n) {
   for(i in c(1:20)){
     ## generate random number
-    m <- sample.int(n=n-1, size=1)
+    m <- sample.int(n=n, size=1)
     cat("m=", m, "\n")
-    ## find the order of m modulo n
-    r <- findOrder(x=m, n=n)
-    cat("r=", r, "\n")
-    if(!is.na(r)) {
-      if((r %% 2) == 0) {
-        l <- gcd(m^(r/2)-1, n)
-        if(l > 1 && l < n) return(l)
+    ## Check, whether m, n are co-prime
+    if(gcd(n, m) == 1) {
+      ## find the order of m modulo n
+      r <- findOrder(x=m, n=n)
+      cat("r=", r, "\n")
+      if(!is.na(r)) {
+        if((r %% 2) == 0) {
+          l <- gcd(m^(r/2)-1, n)
+          if(l > 1 && l < n) return(l)
+        }
       }
     }
   }
@@ -85,3 +95,16 @@ factoring <- function(n) {
   return(NA)
 }
 ```
+
+And we can test whether it works
+
+```{r, warning=FALSE}
+factoring(65)
+factoring(91)
+factoring(511)
+```
+
+Note that this computation is a bit tricky in `R` because of the
+integer arithmetic with large integers. However, for our example here,
+the code is sufficient.
+
