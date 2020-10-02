@@ -1,11 +1,11 @@
 ---
-title: "Shor's factoring algorithm"
+title: "Shor's Factoring Algorithm"
 author: "Carsten Urbach"
 output:
   rmarkdown::html_vignette
     
 vignette: >
-  %\VignetteIndexEntry{Shor}
+  %\VignetteIndexEntry{Shor's Factoring Algorithm}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -24,8 +24,7 @@ numbers $n=p q$.
 # Factoring Algorithm
 
 Given an integer $n$, the factoring algorithm determines $p, q$ such
-that $n=pq$ or it shows that such a factorisation does not exist. We
-assume $p,q\neq 1$.
+that $n=pq$. We assume $p,q\neq 1$.
 
 1. Choose $m, 1\leq m \leq n$ uniformnly random with $m$ co-prime to $n$.
 2. Find the order $r$ of $m$ modulo $n$.
@@ -99,6 +98,7 @@ factoring <- function(n) {
 And we can test whether it works
 
 ```{r, warning=FALSE}
+set.seed(81)  ## for reproducibility
 factoring(65)
 factoring(91)
 factoring(511)
