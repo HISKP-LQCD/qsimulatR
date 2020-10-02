@@ -35,8 +35,9 @@ URL: https://github.com/HISKP-LQCD/qsimulatR
 BugReports: https://github.com/HISKP-LQCD/qsimulatR/issues
 Collate: 
     'state.R'
-    'cnotgate.R'
     'sqgate.R'
+    'ccqgate.R'
+    'cnotgate.R'
     'cqgate.R'
     'export2qiskit.R'
     'measure.R'
