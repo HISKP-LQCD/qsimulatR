@@ -78,7 +78,9 @@ factoring <- function(n) {
     m <- sample.int(n=n, size=1)
     cat("m=", m, "\n")
     ## Check, whether m, n are co-prime
-    if(gcd(n, m) == 1) {
+    g <- gcd(n,m)
+    if(g != 1 ) return(g)
+    else {
       ## find the order of m modulo n
       r <- findOrder(x=m, n=n)
       cat("r=", r, "\n")
