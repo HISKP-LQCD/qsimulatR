@@ -1,0 +1,114 @@
+---
+title: "Addition by Fourier transform"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{Addition by Fourier transform}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
+```
+
+This corresponds to problem 5.6 in Nielsen & Chuang. Which quantum
+circuit can be used to perform the computation
+\[
+|x\rangle\quad\to\quad |x + y \mod 2^n\rangle
+\]
+with $0\leq x < 2^n$ and a constant **integer** $y$.
+
+Fourier transforming the state $|x\rangle$ with $n$ bits, leads to the
+following product representation
+\[
+|x\rangle\ = |x_n x_{n-1} \ldots x_1\rangle\ \to\ 
+\frac{1}{2^n}(|0\rangle + e^{2\pi i 0.x_1}|1\rangle)(|0\rangle +
+e^{2\pi i 0.x_1x_2}|1\rangle)\cdots (|0\rangle + e^{2\pi i 0.x_1\ldots x_n}|1\rangle)
+\]
+where we use the notation
+\[
+x = x_1 2^0 + x_2 2^1 + \ldots + x_n 2^{n-1}
+\]
+and
+\[
+0.x_1 \ldots x_l\ \equiv\ \frac{x_l}{2^l} + \frac{x_{l-1}}{2^{l-1}} + \ldots + \frac{x_1}{2^{1}}\,.
+\]
+Now, we apply a phase shift $R_\theta(\theta)$ to each qubit
+\[
+R_z\ \equiv\ \begin{pmatrix}
+    1 & 0\\
+    0 & \exp(i\theta)\\
+\end{pmatrix}\,.
+\]
+We apply $R_\theta$ with $\theta_j = 2\pi y/2^{n-(j-1)}$ to qubit $j$ where
+$1\leq j\leq n$. For $y$ we can also write
+\[
+y\ =\ y_1 2^0 + y_2 2^1 + \ldots + y_n 2^{n-1}\,.
+\]
+Thus, 
+\[
+\exp(2\pi i y/2^{n-j+1-1}) = \prod_{k=0}^{n-1} \exp(2\pi i y_{k+1} 2^{j-n+k})\,.
+\]
+Since $\exp(2\pi i y_k l) = 1$ for positive integer $l$, this reduces to
+(recall $y_k\in\{0,1\}$)
+\[
+\exp(2\pi i y/2^{n-j+1-1}) = \prod_{k=0}^{n-j-1} \exp(2\pi i y_{k+1} 2^{j-n+k})\,.
+\]
+The $n$th qubit gets multiplied with $\exp(i\theta_n)$ with 
+$\theta_1 = 2\pi y 2^{0}$. Thus, we need to compute
+\[
+\exp(2\pi i x_1/2)\cdot \exp(2\pi y_1/2) = \exp(2\pi (x_1 + y_1) /2)\,.
+\]
+Similary, one gets
+\[
+\exp(2\pi i (x_1/2 + x_2/4 + ...)\cdot \exp(2\pi (y_1/2 + y_2/4 + ...)
+= \exp(2\pi ((x_1 + y_1) /2 + (x_2 + y_2)/4 + ...)
+\]
+which implements the addition $\mod n$ operation in this binary fraction.
+
+Now apply the inverse Fourier trafo and it is easy to see that this
+transforms back to the state $|x+y\mod n\rangle$.
+
+For the practical implementation we first need the phase shift
+operators, which is up to a phase identical to $R_z$:
+
+```{r}
+Rtheta <- function(bit, theta=0.) {
+  return(methods::new("sqgate", bit=as.integer(bit),
+                      M=array(as.complex(c(1, 0, 0, exp(1i*theta))),
+                              dim=c(2,2)), type="Rt"))
+}
+```
+
+With this one can write the desired function on state $x$.
+
+```{r}
+addbyqft <- function(x, y) {
+  n <- x@nbits
+  z <- qsimulatR::qft(x)
+  for(i in c(1:n)) {
+    z  <- Rtheta(bit=i, theta = 2*pi*y/2^(n-i+1)) * z
+  }
+  z <- qft(z, inverse=TRUE)
+  return(invisible(z))
+}
+```
+
+Examples
+
+```{r}
+x <- qstate(5, basis=as.character(seq(0, 2^5-1)))
+x
+z <- addbyqft(x, 3)
+z
+z <- addbyqft(z, 5)
+z
+z <- addbyqft(z, 2)
+z
+```
