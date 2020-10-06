@@ -1,0 +1,317 @@
+---
+title: "Exponentiation modulo n"
+author: "Carsten Urbach"
+output:
+  rmarkdown::html_vignette
+    
+vignette: >
+  %\VignetteIndexEntry{Exponentiation modulo n}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r echo=FALSE}
+library(knitr)
+library(qsimulatR)
+knitr::opts_chunk$set(fig.align='center',
+                      comment='')
+```
+
+Note that for this we roughly follow the paper by Vedral, Barenco and
+Ekert (arXiv:9511018). However, we use the addition by qft instead of
+the procedure using Toffoli gates they propose.
+
+## Multiplication modulo $n$
+
+For multiplying a state $|j\rangle$ with a constant $a$ we can follow
+the scheme to multiply two numbers in binary representation. As an
+example, multiply $5$ with $3$. $5$ has binary representation $0101$
+and $3$ has $0011$. So, the procedure for $5\cdot 3$ is
+
+```
+  00011 * 1 (1*3)
++ 00110 * 0 (0*6)
++ 01100 * 1 (1*12)
++ 11000 * 0 (0*24)
+= 01111 (15)
+```
+
+Now, if we have a controlled add operation, we can use the qubits of
+the first register (in this case representing $5$) as control bits and
+the other register as the constant to add. The single terms in the sum
+can be efficiently pre-computed classically as follows
+
+```{r}
+summands <- function(x, n, N) {
+  b <- as.integer(intToBits(x))
+  ret <- c()
+  for(i in c(1:N)) {
+    s <- 0
+    for(j in c(1:N)) {
+      s <- s+as.integer(b[j])*2^(i+j-2)
+    }
+    ret[i] <- s %% n
+  }
+  return(ret)
+}
+```
+
+Now we need a controlled add operation. Here we can build on our add
+operation using the qft for which we need a controlled phase shift
+operation first
+
+```{r}
+cRtheta <- function(bits, theta=0.) {
+  cqgate(bits=bits, gate=methods::new("sqgate", bit=as.integer(bits[2]),
+                                      M=array(as.complex(c(1, 0, 0, exp(1i*theta))),
+                                              dim=c(2,2)), type="Rt"))
+}
+```
+
+```{r}
+cadd <- function(c, bits, x, y) {
+  n <- length(bits)
+  z <- cqft(c=c, x=x, bits=bits)
+  for(i in c(1:n)) {
+    z  <- cRtheta(bits=c(c, bits[i]), theta = 2*pi*y/2^(n-i+1)) * z
+  }
+  z <- cqft(c=c, x=z, inverse=TRUE, bits=bits)
+  return(invisible(z))
+}
+```
+
+Let's check whether it works as expected:
+
+```{r}
+basis <- c()
+for(i in c(0:(2^4-1))) basis[i+1] <- paste0("|", i %/% 2, ">|", i %% 2, ">")
+x <- H(1)*qstate(4, basis=basis)
+c <- 1
+bits <- c(2:4)
+z <- cadd(c=c, bits=bits, x=x, y=5)
+z
+z <- cadd(c=c, bits=bits, x=z, y=2)
+z
+```
+
+Equipped with this functionality, we can finaly perform a binary
+multiplication. Note that we need two registers, the first one to
+store the inital value and the second one to store the final result of
+the multiplication
+
+```{r}
+mult <- function(reg1, reg2, x, y, swap=TRUE) {
+  stopifnot(length(reg1) == length(reg2))
+  n <- length(reg2)
+  s <- summands(y, 2^n, n)
+  for(i in c(1:n)) {
+    x <- cadd(c=reg1[i], bits=reg2, x=x, y=s[i])
+  }
+  if(swap) {
+    for(i in c(1:n)) {
+      x <- SWAP(c(reg1[i], reg2[i])) * x
+    }
+  }
+  return(invisible(x))
+}
+
+```
+
+With this we can perform a _reversible_ multiplication, which is why
+we we introduced the SWAP operations at the end. They interchange the
+two registers. The result is the following
+
+```{r}
+basis <- c()
+for(i in c(0:(2^3-1))) {
+  for(j in c(0:(2^3-1))) {
+    basis[i*2^3+j + 1] <- paste0("|", i, ">|", j, ">")
+  }
+}
+x <- X(2)*qstate(6, basis=basis)
+x
+reg1 <- c(1:3)
+reg2 <- c(4:6)
+z <- mult(reg1, reg2, x=x, y=3)
+z <- X(5) * z
+z
+```
+
+Let's be a bit more precise here for the multiplication of, say $a$
+and $b$. Starting with both registers in state $|0\rangle$, we can
+first bring the result register to state $|1\rangle$ using a NOT
+operation, i.e. $|0\rangle|1\rangle$. Now, we multiply by $a$, which
+leaves us with state 
+\[
+|a \mod n \rangle|1\rangle
+\]
+which we can apply the NOT gate again to reset the result register to
+state $|0\rangle$ and then we swap the two registers to arrive at
+\[
+|0\rangle|a \mod n\rangle\,.
+\]
+Now we multiply by $b$ getting us to state
+\[
+|a\times b \mod n\rangle|a \mod n\rangle\,.
+\]
+Multiply the result register with the inverse of $a \mod n$ and apply
+the NOT gate getting us to 
+\[
+|0\rangle|a\times b \mod n\rangle\,.
+\]
+The inverse modulo $n$ can be computed efficiently in a classical
+way by the extended Euclidean algorithm
+
+```{r}
+eEa <- function(a, b) {
+  if(a == 0) return(c(b, 0, 1))
+  res <- eEa(b %% a, a)
+  return(c(res[1], res[3] - (b %/% a) * res[2], res[2]))
+}
+
+moduloinverse <- function(a, n) {
+  res <- eEa(a=a, b=n)
+  if(res[1] != 1) stop("inverse does not exist!")
+  return(res[2] %% n)
+}
+```
+
+If $a$ and $n$ are not coprime, the iverse does not exist. However,
+for the application we have in mind this is not an issue.
+
+## Working modulo $N$
+
+So far we have assumed that we work modulo $n$, where $n$ was dictated
+by the number of qubits. However, this is not the realistic case. We
+have to write an adder modulo $N$. We can implement this by
+subtracting $N < n$ whenever needed.
+
+To find out, when this subtraction is needed, is a bit tricky. Say, we
+have a state $|x + y\rangle$. If we subtract $N$ from this state, the most
+significant qubit indicates whether there occured an overflow. Using a
+CNOT gate we can store this info in one ancilla bit $c_1$. We can do
+the same by subtracting $N-y$ and store the info in ancilla qubit
+$c_2$. We do the controlled version directly and define the following
+controlled operation.
+
+```{r}
+ccatchoverflow <- function(c, bits, x, c1, a, N) {
+  b <- c(bits, a)
+  n <- length(b)
+  z <- cadd(c=c, bits=b, x=x, y=2^n-N)
+  z <- CNOT(c(a, c1)) * z
+  z <- cadd(c=c, bits=b, x=z, y=N)
+  return(z)
+}
+```
+This routine will set the qubit $|c_1\rangle$ to 1 if
+$|x_\mathrm{bist}\rangle$ is smaller than $N$ and leave it at zero
+otherwise. It uses $|a\rangle$ as ancilla bit and $|c\rangle$ as
+control bit. Here an example
+
+```{r}
+basis <- c()
+for(i in c(0:(2^6-1))) {
+  basis[i + 1] <-
+    paste0("|", i %/% 8 ,">|a=", (i %/% 4) %% 2, ">|c1=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+}
+
+x <- H(1)*qstate(6, basis=basis)
+z <- cadd(c=1, bits=c(4,5,6), x=x, y=5)
+z
+## 5 < 7 -> c1 = 1
+v <- ccatchoverflow(c=1, bits=c(4,5,6), x=z, c1=2, a=3, N=7)
+v
+## 5 > 3 -> c1 = 0
+w <- ccatchoverflow(c=1, bits=c(4,5,6), x=z, c1=2, a=3, N=3)
+w
+```
+
+This was not exactly what we anticipated above. Recall, we want to
+perfrom $x+y\mod N$, where x is already stored in the quantum
+state. Now, if $x<N$ and $x<N-y$, we know that we don't have to
+subtract $N$, otherwise we have to. This can be implemented using a
+Toffoli (CCNOT) gate. Then we still have to reset the ancilla bits
+$c_{1,2}$. 
+
+```{r}
+caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
+  ## set c1=1 if x < N
+  z <- ccatchoverflow(c=c, bits=bits, x=x, c1=c1, a=a, N=N)
+  ## set c2=1 if x < N - y
+  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c2, a=a, N=N-y)
+
+  ## if only one of c1 and c2, x = x + y - N
+  z <- X(c1) *( CCNOT(c(c1, c2, a)) * (X(c1) * z))
+  z <- cadd(c=a, bits=bits, x=z, y=y-N)
+  z <- X(c1) * (CCNOT(c(c1, c2, a)) * (X(c1) * z))
+
+  ## if c1 and c2 add x = x + y
+  z <- CCNOT(c(c1, c2, a)) * z
+  z <- cadd(c=a, bits=bits, x=z, y=y)
+  z <- CCNOT(c(c1, c2, a)) * z
+
+  ## reset c1,2
+  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c2, a=a, N=y)
+  z <- CNOT(c(c1, c2)) * z
+  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c1, a=a, N=N)
+  return(invisible(z))
+}
+```
+
+Example
+
+```{r}
+basis <- c()
+for(i in c(0:(2^7-1))) {
+  basis[i + 1] <-
+    paste0("|", i %/% 16 , ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2, ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+}
+
+x <- X(1)*qstate(7, basis=basis)
+x
+bits <- c(5,6,7)
+c <- 1
+c1 <- 2
+c2 <- 3
+a <- 4
+N <- 7
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=x, y=3, N=N)
+z
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=2, N=N)
+z
+```
+
+## Exponentiation modulo $n$
+
+For the order finding algorithm, we have to implement the operation
+$f_{a,N}(x) = a^x y \mod N$, where we set $y=1$ in the
+following. Using the binary representation of $x$, we can write
+\[
+a^x\ =\ a^{2^0 x_0} \cdot a^{2^1 x_1} \cdot \ldots a^{2^{n-1}x_{n-1}}\,.
+\]
+So, if we start with the result register in state $|1\rangle$ we have
+to multiply successivly $n$-times by $a^{2^i} \mod n$ depending on the
+value of the qubit $|x_i\rangle$. Then we swap and multiply with the
+inverse pre-computed classically.
+
+```{r, eval=FALSE}
+z <- qstate(6, basis=basis)
+z <- X(1) * z
+z
+a <- 3
+x <- 2
+xb <- as.integer(intToBits(x))
+reg1 <- c(1:3)
+reg2 <- c(4:6)
+##for(i in c(1:1)) {
+i <- 1
+y <- a^(2^(i-1)*xb[i])
+z <- mult(reg1, reg2, x=z, y=y)
+z
+b <- moduloinverse(y, 2^3)
+z <- mult(reg1, reg2, x=z, y=b, swap=FALSE)
+z
+##}
+z
+```
