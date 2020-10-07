@@ -114,7 +114,6 @@ mult <- function(reg1, reg2, x, y, swap=TRUE) {
   }
   return(invisible(x))
 }
-
 ```
 
 With this we can perform a _reversible_ multiplication, which is why
@@ -305,36 +304,106 @@ z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=5, N=N) # 3 + 5 mod 7
 z
 ```
 
+# Controlled Multiplier modulo $N$
+
+Now, like the `mult` function above a version performing
+$|x\rangle\to|x+y\mod N\rangle$. Here we also include the
+back-computation of the second register. `reg1` is the result
+register. 
+
+```{r}
+cmultmodN <- function(c, reg1, reg2, ancillas, x, y, N) {
+  stopifnot(length(reg1) == length(reg2))
+  ## need 4 ancilla registers
+  stopifnot(length(ancillas) == 4 &&
+            length(unique(ancillas)) == 4)
+  n <- length(reg2)
+  ## precompute terms in the sum
+  s <- summands(y, 2^n, n)
+  for(i in c(1:n)) {
+    x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
+    x <- caddmodN(c=reg1[i], bits=reg2,
+                  c1=ancillas[1], c2=ancillas[2],
+                  a=ancillas[3],
+                  x=x, y=s[i] %% N, N=N)
+    x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
+  }
+  for(i in c(1:n)) {
+    x <- CSWAP(c(c, reg1[i], reg2[i])) * x
+  }
+  yinv <- N - moduloinverse(a=y, n=N)
+  s <- summands(yinv, 2^n, n)
+  for(i in c(1:n)) {
+    x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
+    x <- caddmodN(c=reg1[i], bits=reg2,
+                  c1=ancillas[1], c2=ancillas[2],
+                  a=ancillas[3],
+                  x=x, y=s[i] %% N, N=N)
+    x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
+  }
+  return(invisible(x))
+}
+```
+
+Example with two 3 qubit registers, which is starting to become slow,
+because in total we need 11 qubits
+
+```{r}
+basis <- c()
+for(i in c(0:(2^11-1))) {
+  basis[i + 1] <-
+    paste0("|reg1=", i %/% (32*2^3) , ">|reg2=", (i %/% 32) %% 2^3 ,
+           "|t=", (i %/% 16) %% 2,
+           ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2,
+           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+}
+x <- X(9) * (X(1)*qstate(11, basis=basis))
+x
+c <- 1
+ancillas <- c(2:5)
+reg2 <- c(6:8)
+reg1 <- c(9:11)
+N <- 5
+z <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+               ancillas=ancillas, x=x, y=3, N=N)
+z
+z <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+               ancillas=ancillas, x=z, y=3, N=N)
+z
+```
+
 ## Exponentiation modulo $N$
 
 For the order finding algorithm, we have to implement the operation
 $f_{a,N}(x) = a^x y \mod N$, where we set $y=1$ in the
-following. Using the binary representation of $x$, we can write
+following. All this is stored in a $n$ qubit register with $2^n > N$. 
+Using the binary representation of $x$, we can write
 \[
-a^x\ =\ a^{2^0 x_0} \cdot a^{2^1 x_1} \cdot \ldots a^{2^{n-1}x_{n-1}}\,.
+a^x\ =\ a^{2^0 x_0} \cdot a^{2^1 x_1} \cdot \ldots a^{2^{m-1}x_{m-1}}
 \]
+if $x$ is stored with $m$ bits.
 So, if we start with the result register in state $|1\rangle$ we have
 to multiply successivly $n$-times by $a^{2^i} \mod n$ depending on the
-value of the qubit $|x_i\rangle$. Then we swap and multiply with the
-inverse pre-computed classically.
+value of the qubit $|x_i\rangle$. This task can be achieved with the
+controlled multiplier developed above.
 
-```{r, eval=FALSE}
-z <- qstate(6, basis=basis)
-z <- X(1) * z
-z
-a <- 3
-x <- 2
-xb <- as.integer(intToBits(x))
-reg1 <- c(1:3)
-reg2 <- c(4:6)
-##for(i in c(1:1)) {
-i <- 1
-y <- a^(2^(i-1)*xb[i])
-z <- mult(reg1, reg2, x=z, y=y)
-z
-b <- moduloinverse(y, 2^3)
-z <- mult(reg1, reg2, x=z, y=b, swap=FALSE)
-z
-##}
-z
+Then we swap and multiply with the inverse pre-computed classically.
+
+```{r}
+basis <- c()
+for(i in c(0:(2^13-1))) {
+  basis[i + 1] <-
+    paste0("|reg1=", i %/% (16*2^6) , ">|reg2=", i %/% (16*2^3) ,
+           ">|reg3=", (i %/% 16) %% 2^3 ,
+           ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2,
+           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+}
+x <- X(9) * (X(1)*qstate(13, basis=basis))
+c <- 1
+ancillas <- c(2:4)
+reg3 <- c(5:7)
+reg2 <- c(8:10)
+reg1 <- c(11:13)
+N <- 5
+
 ```
