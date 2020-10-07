@@ -183,29 +183,38 @@ for the application we have in mind this is not an issue.
 
 So far we have assumed that we work modulo $n$, where $n$ was dictated
 by the number of qubits. However, this is not the realistic case. We
-have to write an adder modulo $N$. We can implement this by
-subtracting $N < n$ whenever needed.
+have to write an adder modulo $N$, i.e. $|x\rangle\to|x + y\mod
+N\rangle$. We can implement this by subtracting $N < n$ whenever
+needed. We will follow the convention that if $x\geq N$ the operation
+will be $|x\rangle\to|x\rangle$. Moreover, we will assume $x,y\geq 0$.
 
-To find out, when this subtraction is needed, is a bit tricky. Say, we
-have a state $|x + y\rangle$. If we subtract $N$ from this state, the most
+To find out, when this subtraction is needed, is a bit tricky. We want
+to add $y$ to $x$. To decide beforehand, whether or not we have to
+subtract $N$, we have to check whether $x < N-y$. If not, we have to
+subract $N$. If we subtract $N-y$ from this state $|x\rangle$, the most
 significant qubit indicates whether there occured an overflow. Using a
-CNOT gate we can store this info in one ancilla bit $c_1$. We can do
-the same by subtracting $N-y$ and store the info in ancilla qubit
-$c_2$. We do the controlled version directly and define the following
-controlled operation.
+CNOT gate we can store this info in one ancilla bit $c_1$. The we add
+$N-y$ again to retain the original state. Such an operation can be
+implemented as follows in a controlled manner (control bit $c$, `bits`
+the bits in state $|x\rangle$ where x is stored, $a$ an ancilla bit
+and $y$ the value to compare with.
 
 ```{r}
-ccatchoverflow <- function(c, bits, x, c1, a, N) {
+cis.less <- function(c, bits, x, c1, a, y) {
+  ## add ancilla bit as most significant bit to bits
   b <- c(bits, a)
   n <- length(b)
-  z <- cadd(c=c, bits=b, x=x, y=2^n-N)
+  ## cadd works modulo 2^n
+  z <- cadd(c=c, bits=b, x=x, y=2^n-y)
+  ## 'copy' overflow bit
   z <- CNOT(c(a, c1)) * z
-  z <- cadd(c=c, bits=b, x=z, y=N)
+  ## add back, resetting a to |0>
+  z <- cadd(c=c, bits=b, x=z, y=y)
   return(z)
 }
 ```
 This routine will set the qubit $|c_1\rangle$ to 1 if
-$|x_\mathrm{bist}\rangle$ is smaller than $N$ and leave it at zero
+$|x_\mathrm{bits}\rangle$ is smaller than $y$ and leave it at zero
 otherwise. It uses $|a\rangle$ as ancilla bit and $|c\rangle$ as
 control bit. Here an example
 
@@ -213,38 +222,42 @@ control bit. Here an example
 basis <- c()
 for(i in c(0:(2^6-1))) {
   basis[i + 1] <-
-    paste0("|", i %/% 8 ,">|a=", (i %/% 4) %% 2, ">|c1=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+    paste0("|", i %/% 8 ,">|a=",
+    (i %/% 4) %% 2, ">|c1=", (i%/%2) %% 2,
+    ">|c=", i%%2, ">")
 }
 
-x <- H(1)*qstate(6, basis=basis)
+x <- X(1)*qstate(6, basis=basis)
 z <- cadd(c=1, bits=c(4,5,6), x=x, y=5)
 z
 ## 5 < 7 -> c1 = 1
-v <- ccatchoverflow(c=1, bits=c(4,5,6), x=z, c1=2, a=3, N=7)
+v <- cis.less(c=1, bits=c(4,5,6), x=z, c1=2, a=3, y=7)
 v
 ## 5 > 3 -> c1 = 0
-w <- ccatchoverflow(c=1, bits=c(4,5,6), x=z, c1=2, a=3, N=3)
+w <- cis.less(c=1, bits=c(4,5,6), x=z, c1=2, a=3, y=3)
 w
 ```
 
-This was not exactly what we anticipated above. Recall, we want to
-perfrom $x+y\mod N$, where x is already stored in the quantum
-state. Now, if $x<N$ and $x<N-y$, we know that we don't have to
-subtract $N$, otherwise we have to. This can be implemented using a
-Toffoli (CCNOT) gate. Then we still have to reset the ancilla bits
-$c_{1,2}$. 
+Now, recall that if $x\geq N$ we want the operation to leave the state
+unchanged. So, we need two `cis.less` operations, one to check whether
+$x < N$, which we store in ancilla qubit $c_1$ and another one to
+check whether $x < N-y$ stored in $c_2$. Note that the combination
+$c_1=0, c_2=1$ is not possible. The implementation looks as follows:
 
 ```{r}
 caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
+  stopifnot(length(a) == 1 && length(c1) == 1 &&
+            length(c2) == 1 &&
+            length(unique(c(c1, c2, a))) == 3)
   ## set c1=1 if x < N
-  z <- ccatchoverflow(c=c, bits=bits, x=x, c1=c1, a=a, N=N)
+  z <- cis.less(c=c, bits=bits, x=x, c1=c1, a=a, y=N)
   ## set c2=1 if x < N - y
-  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c2, a=a, N=N-y)
+  z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=N-y)
 
-  ## if only one of c1 and c2, x = x + y - N
-  z <- X(c1) *( CCNOT(c(c1, c2, a)) * (X(c1) * z))
+  ## if c1 and not c2, x = x + y - N
+  z <- X(c2) *( CCNOT(c(c1, c2, a)) * (X(c2) * z))
   z <- cadd(c=a, bits=bits, x=z, y=y-N)
-  z <- X(c1) * (CCNOT(c(c1, c2, a)) * (X(c1) * z))
+  z <- X(c2) * (CCNOT(c(c1, c2, a)) * (X(c2) * z))
 
   ## if c1 and c2 add x = x + y
   z <- CCNOT(c(c1, c2, a)) * z
@@ -252,12 +265,20 @@ caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
   z <- CCNOT(c(c1, c2, a)) * z
 
   ## reset c1,2
-  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c2, a=a, N=y)
+  z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=y)
   z <- CNOT(c(c1, c2)) * z
-  z <- ccatchoverflow(c=c, bits=bits, x=z, c1=c1, a=a, N=N)
+  z <- cis.less(c=c, bits=bits, x=z, c1=c1, a=a, y=N)
   return(invisible(z))
 }
 ```
+
+For the reset part: in the first step we flip $c_2$ if $x + y \mod N
+< y$. This can only be true if $x<N-y$. If $c_2$ was 1, its zero now
+and the other way around. The next CNOT gate flips $c_2$
+to $|0\rangle$. The last step resets $c_1$ to $|0\rangle$.
+
+You can also see from the routine above that, if $x\geq N$ then
+`caddmodN` leaves the state unchanged.
 
 Example
 
@@ -265,7 +286,9 @@ Example
 basis <- c()
 for(i in c(0:(2^7-1))) {
   basis[i + 1] <-
-    paste0("|", i %/% 16 , ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2, ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+    paste0("|", i %/% 16 , ">|a=", (i %/% 8) %% 2,
+           ">|c1=", (i %/% 4) %% 2,
+           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
 }
 
 x <- X(1)*qstate(7, basis=basis)
@@ -276,13 +299,13 @@ c1 <- 2
 c2 <- 3
 a <- 4
 N <- 7
-z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=x, y=3, N=N)
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=x, y=3, N=N) # 0 + 3 mod 7
 z
-z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=2, N=N)
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=5, N=N) # 3 + 5 mod 7
 z
 ```
 
-## Exponentiation modulo $n$
+## Exponentiation modulo $N$
 
 For the order finding algorithm, we have to implement the operation
 $f_{a,N}(x) = a^x y \mod N$, where we set $y=1$ in the
