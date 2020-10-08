@@ -21,7 +21,7 @@ Note that for this we roughly follow the paper by Vedral, Barenco and
 Ekert (arXiv:9511018). However, we use the addition by qft instead of
 the procedure using Toffoli gates they propose.
 
-## Multiplication modulo $n$
+## Multiplication modulo $2^n$
 
 For multiplying a state $|j\rangle$ with a constant $a$ we can follow
 the scheme to multiply two numbers in binary representation. As an
@@ -56,6 +56,14 @@ summands <- function(x, n, N) {
 }
 ```
 
+Example
+
+```{r}
+x <- 3
+summands(3, 2^3, 3)
+```
+
+
 Now we need a controlled add operation. Here we can build on our add
 operation using the qft for which we need a controlled phase shift
 operation first
@@ -80,7 +88,9 @@ cadd <- function(c, bits, x, y) {
 }
 ```
 
-Let's check whether it works as expected:
+Let's check whether it works as expected (keep in mind that the
+register is 3 qubit wide plus 1 control qubit, so addition is modulo
+$2^3=8$): 
 
 ```{r}
 basis <- c()
@@ -91,6 +101,8 @@ bits <- c(2:4)
 z <- cadd(c=c, bits=bits, x=x, y=5)
 z
 z <- cadd(c=c, bits=bits, x=z, y=2)
+z
+z <- cadd(c=c, bits=bits, x=z, y=8)
 z
 ```
 
@@ -134,31 +146,34 @@ reg2 <- c(4:6)
 z <- mult(reg1, reg2, x=x, y=3)
 z <- X(5) * z
 z
+z <- mult(reg1, reg2, x=z, y=3)
+z
 ```
 
 Let's be a bit more precise here for the multiplication of, say $a$
-and $b$. Starting with both registers in state $|0\rangle$, we can
+and $b$ in two registers, both $n$ qubits wide. Starting with both
+registers in state $|0\rangle$, we can 
 first bring the result register to state $|1\rangle$ using a NOT
 operation, i.e. $|0\rangle|1\rangle$. Now, we multiply by $a$, which
 leaves us with state 
 \[
-|a \mod n \rangle|1\rangle
+|a \mod 2^n \rangle|1\rangle
 \]
 which we can apply the NOT gate again to reset the result register to
 state $|0\rangle$ and then we swap the two registers to arrive at
 \[
-|0\rangle|a \mod n\rangle\,.
+|0\rangle|a \mod 2^n\rangle\,.
 \]
 Now we multiply by $b$ getting us to state
 \[
-|a\times b \mod n\rangle|a \mod n\rangle\,.
+|a\times b \mod 2^n\rangle|a \mod 2^n\rangle\,.
 \]
 Multiply the result register with the inverse of $a \mod n$ and apply
 the NOT gate getting us to 
 \[
-|0\rangle|a\times b \mod n\rangle\,.
+|0\rangle|a\times b \mod 2^n\rangle\,.
 \]
-The inverse modulo $n$ can be computed efficiently in a classical
+The inverse modulo $2^n$ can be computed efficiently in a classical
 way by the extended Euclidean algorithm
 
 ```{r}
@@ -175,15 +190,15 @@ moduloinverse <- function(a, n) {
 }
 ```
 
-If $a$ and $n$ are not coprime, the iverse does not exist. However,
+If $a$ and $2^n$ are not coprime, the iverse does not exist. However,
 for the application we have in mind this is not an issue.
 
 ## Working modulo $N$
 
-So far we have assumed that we work modulo $n$, where $n$ was dictated
+So far we have assumed that we work modulo $2^n$, where $n$ was dictated
 by the number of qubits. However, this is not the realistic case. We
-have to write an adder modulo $N$, i.e. $|x\rangle\to|x + y\mod
-N\rangle$. We can implement this by subtracting $N < n$ whenever
+have to write an adder modulo $N<2^n$, i.e. $|x\rangle\to|x + y\mod
+N\rangle$. We can implement this by subtracting $N < 2^n$ whenever
 needed. We will follow the convention that if $x\geq N$ the operation
 will be $|x\rangle\to|x\rangle$. Moreover, we will assume $x,y\geq 0$.
 
@@ -207,7 +222,7 @@ cis.less <- function(c, bits, x, c1, a, y) {
   z <- cadd(c=c, bits=b, x=x, y=2^n-y)
   ## 'copy' overflow bit
   z <- CNOT(c(a, c1)) * z
-  ## add back, resetting a to |0>
+  ## add back, resetting ancilla a to |0>
   z <- cadd(c=c, bits=b, x=z, y=y)
   return(z)
 }
@@ -226,7 +241,7 @@ for(i in c(0:(2^6-1))) {
     ">|c=", i%%2, ">")
 }
 
-x <- X(1)*qstate(6, basis=basis)
+x <- H(1)*qstate(6, basis=basis)
 z <- cadd(c=1, bits=c(4,5,6), x=x, y=5)
 z
 ## 5 < 7 -> c1 = 1
@@ -234,6 +249,9 @@ v <- cis.less(c=1, bits=c(4,5,6), x=z, c1=2, a=3, y=7)
 v
 ## 5 > 3 -> c1 = 0
 w <- cis.less(c=1, bits=c(4,5,6), x=z, c1=2, a=3, y=3)
+w
+## 5 < 9 -> c1 = 1
+w <- cis.less(c=1, bits=c(4,5,6), x=z, c1=2, a=3, y=9)
 w
 ```
 
@@ -248,25 +266,33 @@ caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
   stopifnot(length(a) == 1 && length(c1) == 1 &&
             length(c2) == 1 &&
             length(unique(c(c1, c2, a))) == 3)
+  y <- y %% N
   ## set c1=1 if x < N
   z <- cis.less(c=c, bits=bits, x=x, c1=c1, a=a, y=N)
+  #show(z)
   ## set c2=1 if x < N - y
   z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=N-y)
-
+  #show(z)
+  
   ## if c1 and not c2, x = x + y - N
   z <- X(c2) *( CCNOT(c(c1, c2, a)) * (X(c2) * z))
-  z <- cadd(c=a, bits=bits, x=z, y=y-N)
+  z <- cadd(c=a, bits=bits, x=z, y=y - N)
   z <- X(c2) * (CCNOT(c(c1, c2, a)) * (X(c2) * z))
-
+  #show(z)
+  
   ## if c1 and c2 add x = x + y
   z <- CCNOT(c(c1, c2, a)) * z
   z <- cadd(c=a, bits=bits, x=z, y=y)
   z <- CCNOT(c(c1, c2, a)) * z
-
+  #show(z)
+  
   ## reset c1,2
   z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=y)
+  #show(z)
   z <- CNOT(c(c1, c2)) * z
+  #show(z)
   z <- cis.less(c=c, bits=bits, x=z, c1=c1, a=a, y=N)
+  #show(z)
   return(invisible(z))
 }
 ```
@@ -286,8 +312,8 @@ basis <- c()
 for(i in c(0:(2^7-1))) {
   basis[i + 1] <-
     paste0("|", i %/% 16 , ">|a=", (i %/% 8) %% 2,
-           ">|c1=", (i %/% 4) %% 2,
-           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+           ">|c2=", (i %/% 4) %% 2,
+           ">|c1=", (i%/%2) %% 2, ">|c=", i%%2, ">")
 }
 
 x <- X(1)*qstate(7, basis=basis)
@@ -297,10 +323,12 @@ c <- 1
 c1 <- 2
 c2 <- 3
 a <- 4
-N <- 7
-z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=x, y=3, N=N) # 0 + 3 mod 7
+N <- 5
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=x, y=3, N=N) # 0 + 3 mod 5
 z
-z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=5, N=N) # 3 + 5 mod 7
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=1, N=N) # 3 + 1 mod 5
+z
+z <- caddmodN(c=c, bits=bits, c1=c1, c2=c2, a=a, x=z, y=6, N=N) # 4 + 6 mod 5
 z
 ```
 
@@ -308,7 +336,7 @@ z
 
 Now, like the `mult` function above a version performing
 $|x\rangle\to|x+y\mod N\rangle$. Here we also include the
-back-computation of the second register. `reg1` is the result
+un-computation of the second register. `reg1` is the result
 register. 
 
 ```{r}
@@ -319,31 +347,51 @@ cmultmodN <- function(c, reg1, reg2, ancillas, x, y, N) {
             length(unique(ancillas)) == 4)
   n <- length(reg2)
   ## precompute terms in the sum
-  s <- summands(y, 2^n, n)
+  s <- summands(y, N, n)
+  ## start with |x>|0>
   for(i in c(1:n)) {
     x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
-    x <- caddmodN(c=reg1[i], bits=reg2,
+    x <- caddmodN(c=ancillas[4], bits=reg2,
                   c1=ancillas[1], c2=ancillas[2],
                   a=ancillas[3],
-                  x=x, y=s[i] %% N, N=N)
+                  x=x, y=s[i], N=N)
     x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
   }
+  ## now |x>|xy mod N>
   for(i in c(1:n)) {
     x <- CSWAP(c(c, reg1[i], reg2[i])) * x
   }
+  ## now |xy mod N>|x>
+  ## -y_inv mod N
   yinv <- N - moduloinverse(a=y, n=N)
-  s <- summands(yinv, 2^n, n)
+  s <- summands(yinv, N, n)
   for(i in c(1:n)) {
     x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
-    x <- caddmodN(c=reg1[i], bits=reg2,
+    x <- caddmodN(c=ancillas[4], bits=reg2,
                   c1=ancillas[1], c2=ancillas[2],
                   a=ancillas[3],
-                  x=x, y=s[i] %% N, N=N)
+                  x=x, y=s[i], N=N)
     x <- CCNOT(c(c, reg1[i], ancillas[4])) * x
   }
+  ## finally |xy mod N>|0>
   return(invisible(x))
 }
 ```
+
+For the un-computation of the second register, we start in the state
+(only the two registers `reg1` and `reg2`) 
+\[
+|x\cdot y \mod N\rangle|x\rangle\,.
+\]
+Now we determine $yy_\mathrm{inv} = 1\mod N$ the modular inverse of
+$y$ (which is only possible, if $y$ and $N$ are co-prime). If we set
+$y' = xy\mod N$ it follows $y_\mathrm{inv}y' = y_\mathrm{inv}yx\mod
+N=x\mod N$. Thus, $x=y_\mathrm{inv}y'\mod N$. So, if we perform the
+following trafo 
+\[
+|y'\rangle|x\rangle\to|y'\rangle|x-y_\mathrm{inv}y'\mod N\rangle = |y'\rangle|0\rangle\,.
+\]
+we obtain $|x\cdot y \mod N\rangle|0\rangle$. 
 
 Example with two 3 qubit registers, which is starting to become slow,
 because in total we need 11 qubits
@@ -353,11 +401,11 @@ basis <- c()
 for(i in c(0:(2^11-1))) {
   basis[i + 1] <-
     paste0("|reg1=", i %/% (32*2^3) , ">|reg2=", (i %/% 32) %% 2^3 ,
-           "|t=", (i %/% 16) %% 2,
-           ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2,
-           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+           "|anc=", (i %/% 16) %% 2,
+           (i %/% 8) %% 2, (i %/% 4) %% 2,
+           (i%/%2) %% 2, ">|c=", i%%2, ">")
 }
-x <- X(9) * (X(1)*qstate(11, basis=basis))
+x <- CNOT(c(1,10)) * (H(1)*qstate(11, basis=basis))
 x
 c <- 1
 ancillas <- c(2:5)
@@ -370,40 +418,90 @@ z
 z <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
                ancillas=ancillas, x=z, y=3, N=N)
 z
+z <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+               ancillas=ancillas, x=z, y=3, N=N)
+z
+z <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+               ancillas=ancillas, x=z, y=3, N=N)
+z
 ```
+
+This seems to work up to this point.
 
 ## Exponentiation modulo $N$
 
 For the order finding algorithm, we have to implement the operation
 $f_{a,N}(x) = a^x y \mod N$, where we set $y=1$ in the
 following. All this is stored in a $n$ qubit register with $2^n > N$. 
-Using the binary representation of $x$, we can write
-\[
-a^x\ =\ a^{2^0 x_0} \cdot a^{2^1 x_1} \cdot \ldots a^{2^{m-1}x_{m-1}}
-\]
-if $x$ is stored with $m$ bits.
-So, if we start with the result register in state $|1\rangle$ we have
-to multiply successivly $n$-times by $a^{2^i} \mod n$ depending on the
-value of the qubit $|x_i\rangle$. This task can be achieved with the
-controlled multiplier developed above.
 
-Then we swap and multiply with the inverse pre-computed classically.
+So, the following function implements the unitary operation naively
+\[
+|x\rangle\ \to\ |xy^a \mod N\rangle
+\]
 
 ```{r}
-basis <- c()
-for(i in c(0:(2^13-1))) {
-  basis[i + 1] <-
-    paste0("|reg1=", i %/% (16*2^6) , ">|reg2=", i %/% (16*2^3) ,
-           ">|reg3=", (i %/% 16) %% 2^3 ,
-           ">|a=", (i %/% 8) %% 2, ">|c1=", (i %/% 4) %% 2,
-           ">|c2=", (i%/%2) %% 2, ">|c=", i%%2, ">")
+cexpomodN <- function(c, reg1, reg2, ancillas, x, y, a, N) {
+  stopifnot(length(reg1) == length(reg2))
+  ## need 4 ancilla registers
+  stopifnot(length(ancillas) == 4 &&
+            length(unique(ancillas)) == 4)
+  for(i in c(1:a)) {
+    x <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+                   ancillas=ancillas, x=x, y=y, N=N)
+  }
+  return(invisible(x))
 }
-x <- X(9) * (X(1)*qstate(13, basis=basis))
-c <- 1
-ancillas <- c(2:4)
-reg3 <- c(5:7)
-reg2 <- c(8:10)
-reg1 <- c(11:13)
-N <- 5
+```
 
+Example, performing the same example operation as above, i.e. starting
+with $x=2$ and multiplying it with $y^a\mod N$, with $a=4$, $y=3$ and
+$N=5$. 
+
+```{r}
+x <- CNOT(c(1,10)) * (H(1)*qstate(11, basis=basis))
+x
+x <- cexpomodN(c, reg1, reg2, ancillas, x, y=3, a=4, N)
+x
+```
+
+The result should equal `r 2*3^4 %% 5`.
+
+Using the binary representation of $x$, we can write
+\[
+y^a\ =\ y^{2^0 a_0} \cdot y^{2^1 a_1} \cdot \ldots y^{2^{m-1}a_{m-1}}
+\]
+if $x$ is stored with $m$ bits.
+So, alternatively, if we start with the result register in state
+$|1\rangle$ we have to multiply successivly $m$-times by $a^{2^i} \mod
+n$ depending on the value of the qubit $|x_i\rangle$. This task can be
+also achieved with the controlled multiplier developed above. However,
+we need one more register to store $a$. Let's cheat here a bit and use
+a classical `if`-statement. For large $a$ this implementation is of
+course much faster.
+
+```{r}
+cexpomodN2 <- function(c, reg1, reg2, ancillas, x, y, a, N) {
+  stopifnot(length(reg1) == length(reg2))
+  ## need 4 ancilla registers
+  stopifnot(length(ancillas) == 4 &&
+            length(unique(ancillas)) == 4)
+  ab <- as.integer(intToBits(a))
+  n <- max(which(ab == 1))
+  for(i in c(1:n)) {
+    if(ab[i] == 1) {
+      x <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
+                     ancillas=ancillas, x=x, y=y^(2^(i-1)), N=N)
+    }
+  }
+  return(invisible(x))
+}
+```
+
+Example
+
+```{r}
+x <- CNOT(c(1,10)) * (H(1)*qstate(11, basis=basis))
+x
+x <- cexpomodN2(c, reg1, reg2, ancillas, x, y=3, a=4, N)
+x
 ```
