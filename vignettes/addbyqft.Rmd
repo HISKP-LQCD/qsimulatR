@@ -24,6 +24,13 @@ circuit can be used to perform the computation
 \]
 with $0\leq x < 2^n$ and a constant **integer** $y$.
 
+We exploit the general idea
+\[
+x+y = \log\left(\mathrm{e}^x\mathrm{e}^y\right)
+\]
+where the exponentiation is de facto performed by a Fourier trafo
+and the logarithm by the inverse trafo.
+
 Fourier transforming the state $|x\rangle$ with $n$ bits, leads to the
 following product representation
 \[
@@ -65,7 +72,7 @@ $\theta_1 = 2\pi y 2^{0}$. Thus, we need to compute
 \[
 \exp(2\pi i x_1/2)\cdot \exp(2\pi y_1/2) = \exp(2\pi (x_1 + y_1) /2)\,.
 \]
-Similary, one gets
+Similarly, one gets
 \[
 \exp(2\pi i (x_1/2 + x_2/4 + ...)\cdot \exp(2\pi (y_1/2 + y_2/4 + ...)
 = \exp(2\pi ((x_1 + y_1) /2 + (x_2 + y_2)/4 + ...)
@@ -109,6 +116,6 @@ z <- addbyqft(x, 3)
 z
 z <- addbyqft(z, 5)
 z
-z <- addbyqft(z, 2)
+z <- addbyqft(z, 30)
 z
 ```
