@@ -106,9 +106,9 @@ z <- cadd(c=c, bits=bits, x=z, y=8)
 z
 ```
 
-Equipped with this functionality, we can finaly perform a binary
+Equipped with this functionality, we can finally perform a binary
 multiplication. Note that we need two registers, the first one to
-store the inital value and the second one to store the final result of
+store the initial value and the second one to store the final result of
 the multiplication
 
 ```{r}
@@ -190,7 +190,7 @@ moduloinverse <- function(a, n) {
 }
 ```
 
-If $a$ and $2^n$ are not coprime, the iverse does not exist. However,
+If $a$ and $2^n$ are not coprime, the inverse does not exist. However,
 for the application we have in mind this is not an issue.
 
 ## Working modulo $N$
@@ -205,9 +205,9 @@ will be $|x\rangle\to|x\rangle$. Moreover, we will assume $x,y\geq 0$.
 To find out, when this subtraction is needed, is a bit tricky. We want
 to add $y$ to $x$. To decide beforehand, whether or not we have to
 subtract $N$, we have to check whether $x < N-y$. If not, we have to
-subract $N$. If we subtract $N-y$ from this state $|x\rangle$, the most
-significant qubit indicates whether there occured an overflow. Using a
-CNOT gate we can store this info in one ancilla bit $c_1$. The we add
+subtract $N$. If we subtract $N-y$ from this state $|x\rangle$, the most
+significant qubit indicates whether there occurred an overflow. Using a
+CNOT gate we can store this info in one ancilla bit $c_1$. Then we add
 $N-y$ again to retain the original state. Such an operation can be
 implemented as follows in a controlled manner (control bit $c$, `bits`
 the bits in state $|x\rangle$ where x is stored, $a$ an ancilla bit
@@ -298,7 +298,7 @@ caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
 ```
 
 For the reset part: in the first step we flip $c_2$ if $x + y \mod N
-< y$. This can only be true if $x<N-y$. If $c_2$ was 1, its zero now
+< y$. This can only be true if $x>N-y$. If $c_2$ was 1, it's zero now
 and the other way around. The next CNOT gate flips $c_2$
 to $|0\rangle$. The last step resets $c_1$ to $|0\rangle$.
 

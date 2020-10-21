@@ -24,6 +24,13 @@ circuit can be used to perform the computation
 \]
 with $0\leq x < 2^n$ and a constant **integer** $y$.
 
+We exploit the general idea
+\[
+x+y = \log\left(\mathrm{e}^x\mathrm{e}^y\right)
+\]
+where the exponentiation is de facto performed by a Fourier trafo
+and the logarithm by the inverse trafo.
+
 Fourier transforming the state $|x\rangle$ with $n$ bits, leads to the
 following product representation
 \[
@@ -37,7 +44,7 @@ x = x_1 2^0 + x_2 2^1 + \ldots + x_n 2^{n-1}
 \]
 and
 \[
-0.x_1 \ldots x_l\ \equiv\ \frac{x_l}{2^l} + \frac{x_{l-1}}{2^{l-1}} + \ldots + \frac{x_1}{2^{1}}\,.
+0.x_1 \ldots x_l\ \equiv\ \frac{x_l}{2} + \frac{x_{l-1}}{2^{2}} + \ldots + \frac{x_1}{2^{l}}\,.
 \]
 Now, we apply a phase shift $R_\theta(\theta)$ to each qubit
 \[
@@ -61,14 +68,14 @@ Since $\exp(2\pi i y_k l) = 1$ for positive integer $l$, this reduces to
 \exp(2\pi i y/2^{n-j+1-1}) = \prod_{k=0}^{n-j-1} \exp(2\pi i y_{k+1} 2^{j-n+k})\,.
 \]
 The $n$th qubit gets multiplied with $\exp(i\theta_n)$ with 
-$\theta_1 = 2\pi y 2^{0}$. Thus, we need to compute
+$\theta_n = 2\pi y /2^{1}$. Thus, we need to compute
 \[
-\exp(2\pi i x_1/2)\cdot \exp(2\pi y_1/2) = \exp(2\pi (x_1 + y_1) /2)\,.
+\exp(2\pi i x_1/2)\cdot \exp(2\pi i y_1/2) = \exp(2\pi i (x_1 + y_1) /2)\,.
 \]
-Similary, one gets
+Similarly, one gets
 \[
-\exp(2\pi i (x_1/2 + x_2/4 + ...)\cdot \exp(2\pi (y_1/2 + y_2/4 + ...)
-= \exp(2\pi ((x_1 + y_1) /2 + (x_2 + y_2)/4 + ...)
+\exp(2\pi i (x_1/2 + x_2/4 + ...)\cdot \exp(2\pi i (y_1/2 + y_2/4 + ...)
+= \exp(2\pi i ((x_1 + y_1) /2 + (x_2 + y_2)/4 + ...))
 \]
 which implements the addition $\mod n$ operation in this binary fraction.
 
@@ -109,6 +116,6 @@ z <- addbyqft(x, 3)
 z
 z <- addbyqft(z, 5)
 z
-z <- addbyqft(z, 2)
+z <- addbyqft(z, 30)
 z
 ```
