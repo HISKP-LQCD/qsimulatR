@@ -477,7 +477,8 @@ n$ depending on the value of the qubit $|x_i\rangle$. This task can be
 also achieved with the controlled multiplier developed above. However,
 we need one more register to store $a$. Let's cheat here a bit and use
 a classical `if`-statement. For large $a$ this implementation is of
-course much faster.
+course much faster, but the factors $y^{2^i}$ become very large very
+quickly.
 
 ```{r}
 cexpomodN2 <- function(c, reg1, reg2, ancillas, x, y, a, N) {
@@ -505,3 +506,4 @@ x
 x <- cexpomodN2(c, reg1, reg2, ancillas, x, y=3, a=4, N)
 x
 ```
+
