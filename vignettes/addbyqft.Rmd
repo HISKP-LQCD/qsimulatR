@@ -36,7 +36,7 @@ following product representation
 \[
 |x\rangle\ = |x_n x_{n-1} \ldots x_1\rangle\ \to\ 
 \frac{1}{2^n}(|0\rangle + e^{2\pi i 0.x_1}|1\rangle)(|0\rangle +
-e^{2\pi i 0.x_1x_2}|1\rangle)\cdots (|0\rangle + e^{2\pi i 0.x_1\ldots x_n}|1\rangle)
+e^{2\pi i 0.x_2x_1}|1\rangle)\cdots (|0\rangle + e^{2\pi i 0.x_n\ldots x_1}|1\rangle)
 \]
 where we use the notation
 \[
@@ -44,7 +44,7 @@ x = x_1 2^0 + x_2 2^1 + \ldots + x_n 2^{n-1}
 \]
 and
 \[
-0.x_1 \ldots x_l\ \equiv\ \frac{x_1}{2} + \frac{x_2}{2^{2}} + \ldots + \frac{x_l}{2^{l}}\,.
+0.x_l \ldots x_1\ \equiv\ \frac{x_l}{2} + \frac{x_{l-1}}{2^{2}} + \ldots + \frac{x_1}{2^{l}}\,.
 \]
 Now, we apply a phase shift $R_\theta(\theta)$ to each qubit
 \[
@@ -60,22 +60,22 @@ y\ =\ y_1 2^0 + y_2 2^1 + \ldots + y_n 2^{n-1}\,.
 \]
 Thus, 
 \[
-\exp(2\pi i y/2^{n-j+1-1}) = \prod_{k=0}^{n-1} \exp(2\pi i y_{k+1} 2^{j-n+k})\,.
+\exp(2\pi i y/2^{n-j+1}) = \prod_{k=0}^{n-1} \exp(2\pi i y_{k+1} 2^{j-1-n+k})\,.
 \]
 Since $\exp(2\pi i y_k l) = 1$ for positive integer $l$, this reduces to
 (recall $y_k\in\{0,1\}$)
 \[
-\exp(2\pi i y/2^{n-j+1-1}) = \prod_{k=0}^{n-j-1} \exp(2\pi i y_{k+1} 2^{j-n+k})\,.
+\exp(2\pi i y/2^{n-j+1}) = \prod_{k=0}^{n-j} \exp(2\pi i y_{k+1} 2^{j-1-n+k})\,.
 \]
 The $n$th qubit gets multiplied with $\exp(i\theta_n)$ with 
 $\theta_n = 2\pi y /2^{1}$. Thus, we need to compute
 \[
 \exp(2\pi i x_1/2)\cdot \exp(2\pi i y_1/2) = \exp(2\pi i (x_1 + y_1) /2)\,.
 \]
-Similarly, one gets
+Similarly, for the $j$th qubit one gets
 \[
-\exp(2\pi i (x_1/2 + x_2/4 + ...)\cdot \exp(2\pi i (y_1/2 + y_2/4 + ...)
-= \exp(2\pi i ((x_1 + y_1) /2 + (x_2 + y_2)/4 + ...))
+\exp(2\pi i (x_1/2^{n-j+1} + x_2/2^{n-j} + ...))\cdot \exp(2\pi i (y_1/2^{n-j+1} + y_2/2^{n-j} + ...))
+= \exp(2\pi i ((x_1 + y_1) /2^{n-j+1} + (x_2 + y_2)/2^{n-j} + ...))
 \]
 which implements the addition $\mod n$ operation in this binary fraction.
 
@@ -99,8 +99,8 @@ With this one can write the desired function on state $x$.
 addbyqft <- function(x, y) {
   n <- x@nbits
   z <- qsimulatR::qft(x)
-  for(i in c(1:n)) {
-    z  <- Rtheta(bit=i, theta = 2*pi*y/2^(n-i+1)) * z
+  for(j in c(1:n)) {
+    z  <- Rtheta(bit=j, theta = 2*pi*y/2^(n-j+1)) * z
   }
   z <- qft(z, inverse=TRUE)
   return(invisible(z))
