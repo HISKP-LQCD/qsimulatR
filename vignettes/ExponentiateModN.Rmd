@@ -269,30 +269,23 @@ caddmodN <- function(c, bits, c1, c2, a, x, y, N) {
   y <- y %% N
   ## set c1=1 if x < N
   z <- cis.less(c=c, bits=bits, x=x, c1=c1, a=a, y=N)
-  #show(z)
   ## set c2=1 if x < N - y
   z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=N-y)
-  #show(z)
   
   ## if c1 and not c2, x = x + y - N
   z <- X(c2) *( CCNOT(c(c1, c2, a)) * (X(c2) * z))
   z <- cadd(c=a, bits=bits, x=z, y=y - N)
   z <- X(c2) * (CCNOT(c(c1, c2, a)) * (X(c2) * z))
-  #show(z)
   
   ## if c1 and c2 add x = x + y
   z <- CCNOT(c(c1, c2, a)) * z
   z <- cadd(c=a, bits=bits, x=z, y=y)
   z <- CCNOT(c(c1, c2, a)) * z
-  #show(z)
   
   ## reset c1,2
   z <- cis.less(c=c, bits=bits, x=z, c1=c2, a=a, y=y)
-  #show(z)
   z <- CNOT(c(c1, c2)) * z
-  #show(z)
   z <- cis.less(c=c, bits=bits, x=z, c1=c1, a=a, y=N)
-  #show(z)
   return(invisible(z))
 }
 ```
@@ -478,7 +471,7 @@ also achieved with the controlled multiplier developed above. However,
 we need one more register to store $a$. Let's cheat here a bit and use
 a classical `if`-statement. For large $a$ this implementation is of
 course much faster, but the factors $y^{2^i}$ become very large very
-quickly.
+quickly. That's why we apply the modulo
 
 ```{r}
 cexpomodN2 <- function(c, reg1, reg2, ancillas, x, y, a, N) {
@@ -488,11 +481,13 @@ cexpomodN2 <- function(c, reg1, reg2, ancillas, x, y, a, N) {
             length(unique(ancillas)) == 4)
   ab <- as.integer(intToBits(a))
   n <- max(which(ab == 1))
+  y2 <- y %% N
   for(i in c(1:n)) {
     if(ab[i] == 1) {
       x <- cmultmodN(c=c, reg1=reg1, reg2=reg2,
-                     ancillas=ancillas, x=x, y=y^(2^(i-1)), N=N)
+                     ancillas=ancillas, x=x, y=y2, N=N)
     }
+    y2 <- ((y2%%N) * (y2%%N)) %% N # y2=y^(2^i) mod N
   }
   return(invisible(x))
 }
