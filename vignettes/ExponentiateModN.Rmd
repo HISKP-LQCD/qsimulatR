@@ -18,8 +18,9 @@ knitr::opts_chunk$set(fig.align='center',
 ```
 
 Note that for this we roughly follow the paper by Vedral, Barenco and
-Ekert (arXiv:9511018). However, we use the addition by qft instead of
-the procedure using Toffoli gates they propose.
+Ekert (arXiv:quant-ph/0008033, building on arXiv:9511018). However, we
+use the addition by qft instead of 
+the procedure using Toffoli gates.
 
 ## Multiplication modulo $2^n$
 

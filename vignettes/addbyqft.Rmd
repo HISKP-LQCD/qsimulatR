@@ -17,7 +17,9 @@ knitr::opts_chunk$set(fig.align='center',
                       comment='')
 ```
 
-This corresponds to problem 5.6 in Nielsen & Chuang. Which quantum
+This corresponds to problem 5.6 in Nielsen & Chuang. The original
+paper is arXiv:quant-ph/0008033, building on arXiv:9511018.
+Which quantum
 circuit can be used to perform the computation
 \[
 |x\rangle\quad\to\quad |x + y \mod 2^n\rangle
