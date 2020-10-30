@@ -200,10 +200,20 @@ setMethod("*", c("matrix", "qstate"),
           }
           )
 
-
-
-
-
-
-
-
+#' times-number-qstate
+#'
+#' Multiplies a quantum gate by a global (phase) factor.
+#'
+#' @param e1 object of S4 class 'complex'
+#' @param e2 object of S4 class 'qstate'
+#' @return
+#' An object of S4 class 'qstate'
+#'
+setMethod("*", c("complex", "qstate"),
+          function(e1, e2) {
+            stopifnot(abs(abs(e1)-1) < 4*.Machine$double.eps)
+            e2@coefs = e1 * e2@coefs
+            methods::validObject(e2)
+            return(e2)
+          }
+          )
