@@ -1,6 +1,6 @@
 ---
 title: "qsimulatR"
-author: "Carsten Urbach"
+author: "Johann Ostmeyer and Carsten Urbach"
 output:
   rmarkdown::html_vignette
     
