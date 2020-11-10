@@ -52,6 +52,8 @@ export2qiskit <- function(object, filename="circuit.py", append=FALSE) {
       if(object@circuit$gatelist[[i]]$type == "S") op <- paste0("s(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "Tgate") op <- paste0("t(", object@circuit$gatelist[[i]]$bits[1]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "Rz") op <- paste0("rz(", object@circuit$gatelist[[i]]$angle, ",", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(grepl("^R[0-9]+", object@circuit$gatelist[[i]]$type)) op <- paste0("u1(pi/", object@circuit$gatelist[[i]]$angle, ",", object@circuit$gatelist[[i]]$bits[1]-1, ")")
+      if(grepl("^CR[0-9]+", object@circuit$gatelist[[i]]$type)) op <- paste0("cu1(pi/", object@circuit$gatelist[[i]]$angle, ",", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "CNOT") op <- paste0("cx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "SWAP") op <- paste0("swap(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ")")
       if(object@circuit$gatelist[[i]]$type == "CCNOT") op <- paste0("ccx(", object@circuit$gatelist[[i]]$bits[1]-1, ",", object@circuit$gatelist[[i]]$bits[2]-1, ",", object@circuit$gatelist[[i]]$bits[3]-1, ")")

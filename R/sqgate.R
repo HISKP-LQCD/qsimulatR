@@ -71,6 +71,7 @@ setMethod("*", c("sqgate", "qstate"),
             ngates <- length(circuit$gatelist)
             circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
             if(e1@type == "Rz") circuit$gatelist[[ngates+1]]$angle <- -Re(2*1i*log(e1@M[2,2]))
+            if(grepl("^R[0-9]+", e1@type)) circuit$gatelist[[ngates+1]]$angle <- -2*pi/Re(2*1i*log(x@M[2,2]))
             circuit$gatelist[[ngates+1]]$controlled <- FALSE
             return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
           }
@@ -140,6 +141,8 @@ Rz <- function(bit, theta=0.) {
 #' ( 0   exp(+-2*pi*1i/2^i) )
 #'
 #' If 'sign < 0', the inverse of the exponential is used.
+#' This gate is up to global phase identical with the 'Rz'
+#' gate with specific values of the angle.
 #' 
 #' @return
 #' An S4 class 'sqgate' object is returned
