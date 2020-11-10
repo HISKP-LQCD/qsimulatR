@@ -16,7 +16,7 @@ Description: A quantum computer simulator framework. It allows to
     qubit gates. For convenience, it currently provides the
     most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT, SWAP, Toffoli or
     CCNOT, Fredkin or CSWAP). qsimulatR supports plotting of circuits and is able to
-    export circuits to Qsikit <https://qiskit.org/>, a python package
+    export circuits to Qiskit <https://qiskit.org/>, a python package
     which can be used to run on IBM's hardware <https://quantum-computing.ibm.com/>.
 Imports:
     methods,
