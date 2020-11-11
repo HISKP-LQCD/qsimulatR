@@ -70,8 +70,8 @@ setMethod("*", c("sqgate", "qstate"),
             circuit <- e2@circuit
             ngates <- length(circuit$gatelist)
             circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
-            if(e1@type == "Rz") circuit$gatelist[[ngates+1]]$angle <- -Re(2*1i*log(e1@M[2,2]))
-            if(grepl("^R[0-9]+", e1@type)) circuit$gatelist[[ngates+1]]$angle <- -2*pi/Re(2*1i*log(x@M[2,2]))
+            if(e1@type == "Rz" || grepl("^R[0-9]+", e1@type))
+              circuit$gatelist[[ngates+1]]$angle <- Arg(e1@M[2,2])
             circuit$gatelist[[ngates+1]]$controlled <- FALSE
             return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
           }
