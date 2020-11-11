@@ -40,13 +40,14 @@ export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FA
   if(import){
     olines <- c(olines, "import numpy as np",
                 "from qiskit import(QuantumCircuit, execute, Aer)",
-                "from qiskit.visualization import plot_histogram")
+                "from qiskit.visualization import plot_histogram",
+                "simulator = Aer.get_backend('qasm_simulator')")
   }
   if(object@circuit$ncbits == 0) {
     olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ")"))
   }
   else {
-    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@nbits, ")"))
+    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@ncbits, ")"))
   }
 
   gates <- object@circuit$gatelist
