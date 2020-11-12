@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette
     
 vignette: >
-  %\VignetteIndexEntry{phase-estimation}
+  %\VignetteIndexEntry{Phase Estimation Algorithm}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
