@@ -15,6 +15,7 @@ check_sqgate  <- function(object) {
 #' @slot bit Integer. The single bit to act on.
 #' @slot M complex valued array. The 2x2 matrix representing the
 #' gate
+#' @slot type a character vector representing the type of gate
 #'
 #' @details
 #' The qubits are counted from 1 to \code{nbits} starting with the least

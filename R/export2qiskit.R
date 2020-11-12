@@ -47,7 +47,7 @@ export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FA
     olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ")"))
   }
   else {
-    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@ncbits, ")"))
+    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@circuit$ncbits, ")"))
   }
 
   gates <- object@circuit$gatelist
