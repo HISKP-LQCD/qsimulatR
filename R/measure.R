@@ -9,38 +9,28 @@
 #' 
 #' @param e1 object to measure
 #' @param bit bit to project on
+#' @param repetitions number of measurements
 #' @docType methods
 #' @exportMethod measure
-setGeneric("measure", function(e1, bit) attributes(e1))
+setGeneric("measure", function(e1, bit=NA, repetitions=NA) attributes(e1))
 
 #' @rdname measure-methods
 #' @aliases measure
 #'
-#' @details \code{measure(e1)} performs a projection of the total wave function (i.e. all qubits).
+#' @details \code{measure(e1, bit, repetitions)} performs `repetitions` many 
+#' projections/measurements of the qubit `bit`. If `bit` is not given 
+#' explicitly, all qubits are projected.
 #'
 #' @return
-#' \code{measure(e1)} returns a `qstate` object representing the state projected on.
-#'
-#' @examples
-#' ## project the total wave function
-#' x <- H(1) * (H(2) * qstate(nbits=2))
-#' measure(x)
-setMethod("measure", c("qstate"),
-          function(e1) {
-            prob <- Re(e1@coefs * Conj(e1@coefs))
-            e1@coefs <- as.complex(stats::rmultinom(n=1, size=1, prob=prob))
-            return(e1)
-          }
-          )
-
-#' @rdname measure-methods
-#' @aliases measure
-#'
-#' @details \code{measure(e1, bit)} performs a projection/measurement of the abit `bit`.
-#'
-#' @return
-#' \code{measure(e1, bit)} returns a list with an element `psi` the `qstate` object projected onto
-#' and an element `value` with the value of the qubit `bit`.
+#' \code{measure(e1, bit, repetitions)} returns a list with the measured `bit`, 
+#' the number of `repetitions`, the probability distribution of all states 
+#' `prob` and the results vector `value`. If all bits are measured, the 
+#' basis is added to the list as `basis`. The collapsed state is stored as 
+#' `psi` if exactly one measurement is performed.
+#' In the case of a single qubit measurement `value` is of length `repetitions` 
+#' and contains all the results of this projection. Otherwise `value` is of 
+#' length 2^nbits and it contains the counts how often each state has been 
+#' obtained.
 #'
 #' @importFrom stats runif
 #' @examples
@@ -48,27 +38,69 @@ setMethod("measure", c("qstate"),
 #' x <- H(1) * (H(2) * qstate(nbits=2))
 #' measure(x, 1)
 #' measure(x, 2)
-setMethod("measure", c("qstate", "numeric"),
-          function(e1, bit) {
-            stopifnot(bit %in% c(1:e1@nbits))
+setMethod("measure", c("qstate"),
+          function(e1, bit=NA, repetitions=1) {
+            stopifnot(is.na(bit) || bit %in% c(1:e1@nbits))
             prob <- Re(e1@coefs * Conj(e1@coefs))
-            N <- 2^e1@nbits
-            ii <- which(!is.bitset(0:(N-1), bit))
-            is0 <- sum(prob[ii])
-            value <- 0
-            coefs <- e1@coefs
-            if(runif(1) < is0) coefs[-ii] <- 0i
-            else {
-              coefs[ii] <- 0i
-              value <- 1
+
+            res <- list(bit=bit, repetitions=repetitions, prob=prob)
+            if(is.na(bit)){
+              res$nbits <- e1@nbits
+              res$basis <- e1@basis
+              value <- stats::rmultinom(n=1, size=repetitions, prob=prob)[,1]
+              if(repetitions == 1) coefs <- value
+            }else{
+              N <- 2^e1@nbits
+              ii <- which(is.bitset(0:(N-1), bit))
+              is1 <- sum(prob[ii])
+              value <- ifelse(runif(repetitions) < is1, 1, 0)
+              if(repetitions == 1){
+                coefs <- e1@coefs
+                if(value == 1) coefs[-ii] <- 0i
+                else coefs[ii] <- 0i
+              }
             }
-            ngates <- length(e1@circuit$gatelist)
-            cbit <- e1@circuit$ncbits+1
-            e1@circuit$gatelist[[ngates+1]] <- list(type="measure", bits=c(bit, cbit, NA))
-            e1@circuit$ncbits <- cbit
-            return(list(psi=qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=e1@circuit), value=value))
+            res$value <- value
+
+            if(repetitions == 1){
+              ngates <- length(e1@circuit$gatelist)
+              if(is.na(bit)){
+                e1@circuit$gatelist[(ngates+1):(ngates+e1@nbits)] <- lapply(1:e1@nbits, function(bit) list(type="measure", bits=c(bit, e1@circuit$ncbits+bit, NA)))
+                e1@circuit$ncbits <- e1@circuit$ncbits + e1@nbits
+              }else{
+                cbit <- e1@circuit$ncbits+1
+                e1@circuit$gatelist[[ngates+1]] <- list(type="measure", bits=c(bit, cbit, NA))
+                e1@circuit$ncbits <- cbit
+              }
+              res$psi <- qstate(nbits=e1@nbits, coefs=as.complex(coefs), basis=e1@basis, circuit=e1@circuit)
+            }
+
+            attr(res, "class") <- c("measurement", "list")
+            return(invisible(res))
           }
           )
+
+#' Summarize a quantum measurement
+#'
+#' @param x object returned by \code{measure}
+#'
+#' @return
+#' No return value.
+#' 
+#' @export
+summary.measurement <- function(x) {
+  if(is.na(x$bit)){
+    cat("All bits have been measured", x$repetitions, "times with the outcome:\n")
+    tmp.state <- qstate(x$nbits, basis=x$basis)
+    tmp.state@coefs <- as.complex(x$value)
+    show(tmp.state)
+  }else{
+    cat("Bit", x$bit, "has been measured", x$repetitions, "times with the outcome:\n")
+    ones <- sum(x$value)
+    zeros <- x$repetitions - ones
+    cat("0: ", zeros, "\n1: ", ones, "\n")
+  }
+}
 
 truth.line <- function(i, gate, nbits) {
   eps <- 1e-14
