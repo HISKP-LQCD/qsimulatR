@@ -106,7 +106,7 @@ summary.measurement <- function(object, ...) {
 
 #' Plot the histogram of a quantum measurement
 #'
-#' @param object as returned by \code{measure}
+#' @param x object as returned by \code{measure}
 #' @param only.nonzero are the states with zero measurements to be plotted?
 #' @param by.name shall the xlabel contain the basis names? If `FALSE`, the 
 #' index number is used.
@@ -114,34 +114,36 @@ summary.measurement <- function(object, ...) {
 #' normalised to 1.
 #' @param ... Generic parameters to pass on to \code{barplot()}
 #'
+#' @importFrom graphics barplot
+#' 
 #' @return
 #' No return value.
 #' 
 #' @export
-hist.measurement <- function(object, only.nonzero=TRUE, by.name=only.nonzero, freq=TRUE, ...) {
-  if(is.na(object$bit)){
-    if(only.nonzero) mask <- which(object$value > 0)
-    else mask <- 1:(length(object$value))
-    counts <- object$value[mask]
+hist.measurement <- function(x, only.nonzero=TRUE, by.name=only.nonzero, freq=TRUE, ...) {
+  if(is.na(x$bit)){
+    if(only.nonzero) mask <- which(x$value > 0)
+    else mask <- 1:(length(x$value))
+    counts <- x$value[mask]
     if(by.name){
-      if(length(object$basis) > 1) names.arg <- object$basis[mask]
+      if(length(x$basis) > 1) names.arg <- x$basis[mask]
       else{
-        names.arg <- sapply(mask-1, genStateString, nbits=object$nbits, collapse=object$basis)
+        names.arg <- sapply(mask-1, genStateString, nbits=x$nbits, collapse=x$basis)
       }
     }else{
       names.arg <- mask
     }
   }else{
     names.arg <- 0:1
-    ones <- sum(object$value)
-    zeros <- object$repetitions - ones
+    ones <- sum(x$value)
+    zeros <- x$repetitions - ones
     counts <- c(zeros, ones)
   }
 
   if(freq){
     ylab <- "Counts"
   }else{
-    counts <- counts/object$repetitions
+    counts <- counts/x$repetitions
     ylab <- "Probability"
   }
 
