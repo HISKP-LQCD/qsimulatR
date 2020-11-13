@@ -22,6 +22,11 @@
 #'
 #' @references
 #' https://qiskit.org/documentation/
+#'
+#' @details
+#' note that only standard gates can be exported, not self defined ones.
+#' The function will draw a warning in case a gate cannot be exported
+#' and indicate it in the output file.
 #' 
 #' @return
 #' nothing is returned, but a file is created.
@@ -32,6 +37,8 @@
 #' x <- X(2) * x
 #' x <- CNOT(c(1,2)) * x
 #' export2qiskit(measure(x,1)$psi)
+#' cat(readLines("circuit.py"), sep = '\n')
+#' file.remove("circuit.py")
 #' 
 #' @export
 export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FALSE, import=FALSE) {
@@ -47,7 +54,7 @@ export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FA
     olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ")"))
   }
   else {
-    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@ncbits, ")"))
+    olines <- c(olines, paste0(varname, " = QuantumCircuit(", object@nbits, ",", object@circuit$ncbits, ")"))
   }
 
   gates <- object@circuit$gatelist

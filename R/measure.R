@@ -82,22 +82,24 @@ setMethod("measure", c("qstate"),
 
 #' Summarize a quantum measurement
 #'
-#' @param x object returned by \code{measure}
+#' @param object as returned by \code{measure}
+#' @param ... Generic parameters to pass on, not used here.
 #'
+#' @importFrom methods show
 #' @return
 #' No return value.
 #' 
 #' @export
-summary.measurement <- function(x) {
-  if(is.na(x$bit)){
-    cat("All bits have been measured", x$repetitions, "times with the outcome:\n")
-    tmp.state <- qstate(x$nbits, basis=x$basis)
-    tmp.state@coefs <- as.complex(x$value)
+summary.measurement <- function(object, ...) {
+  if(is.na(object$bit)){
+    cat("All bits have been measured", object$repetitions, "times with the outcome:\n")
+    tmp.state <- qstate(object$nbits, basis=object$basis)
+    tmp.state@coefs <- as.complex(object$value)
     show(tmp.state)
   }else{
-    cat("Bit", x$bit, "has been measured", x$repetitions, "times with the outcome:\n")
-    ones <- sum(x$value)
-    zeros <- x$repetitions - ones
+    cat("Bit", object$bit, "has been measured", object$repetitions, "times with the outcome:\n")
+    ones <- sum(object$value)
+    zeros <- object$repetitions - ones
     cat("0: ", zeros, "\n1: ", ones, "\n")
   }
 }

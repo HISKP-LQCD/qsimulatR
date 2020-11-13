@@ -261,3 +261,7 @@ which can be used at
 [quantum-computing.ibm.com](https://quantum-computing.ibm.com) to run
 on real quantum hardware. Note that the export functionality only
 works for standard quantum gates, not for customary defined ones.
+
+```{r, echo=FALSE, results=FALSE}
+file.remove(filename)
+```

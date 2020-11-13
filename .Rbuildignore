@@ -1,2 +1,7 @@
 install
 document
+qsimulatR.pdf
+vignettes/circuit.py
+circuit.py
+^doc$
+^Meta$

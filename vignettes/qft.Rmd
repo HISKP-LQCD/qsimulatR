@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette
     
 vignette: >
-  %\VignetteIndexEntry{qft}
+  %\VignetteIndexEntry{Quantum Fourier Trafo}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---

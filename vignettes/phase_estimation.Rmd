@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette
     
 vignette: >
-  %\VignetteIndexEntry{phase-estimation}
+  %\VignetteIndexEntry{Phase Estimation Algorithm}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
@@ -117,7 +117,7 @@ $|\tilde\varphi\rangle$
 
 ```{r}
 xtmp <- measure(x)
-cbits <- genStateNumber(which(xtmp@coefs==1)-1, t+1)
+cbits <- genStateNumber(which(xtmp$value==1)-1, t+1)
 phi <- sum(cbits[1:t]/2^(1:t))
 
 cbits[1:t]
@@ -179,7 +179,7 @@ x <- qft(x, inverse=TRUE, bits=c(2:(t+1)))
 
 measurephi <- function(x, t) {
   xtmp <- measure(x)
-  cbits <- genStateNumber(which(xtmp@coefs==1)-1, t+1)
+  cbits <- genStateNumber(which(xtmp$value==1)-1, t+1)
   phi <- sum(cbits[1:t]/2^(1:t))
   return(invisible(phi))
 }
