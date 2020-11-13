@@ -111,7 +111,7 @@ plot(x)
 ```
 
 $x$ is now the state
-$|\tilde\varphi\rangle|u\rangle$. $|\tilde\varphi\rangle$ is not neccessarily
+$|\tilde\varphi\rangle|u\rangle$. $|\tilde\varphi\rangle$ is not necessarily
 a pure state. The next step is a projective measurement of
 $|\tilde\varphi\rangle$
 
