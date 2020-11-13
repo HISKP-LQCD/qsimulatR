@@ -88,7 +88,6 @@ genStateString <- function(int, nbits, collapse="") {
 #'
 #' @export
 genComputationalBasis <- function(nbits, collapse="") {
-  basis <- c()
   N <- 2^nbits
   basis <- sapply(0:(N-1), genStateString, nbits=nbits, collapse=collapse)
   return(basis)

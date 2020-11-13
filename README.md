@@ -15,10 +15,17 @@ Execute:
 ```
 ./install
 ```
+You might have to install additional packages. Just use `install.packages()` for any packages recommended in a possible error message.
 
 The library `qsimulatR` is now available in your R installation and can be loaded with:
 ```
 library(qsimulatR)
+```
+
+Check for updates regularly. Do so by going into the directory `qsimulatR` and executing
+```
+git pull
+./install
 ```
 
 ## Usage
@@ -45,10 +52,11 @@ z
 plot(z)
 
 # project onto a single compute basis state
-measure(z)
+res = measure(z)
+# draw the circuit
+plot(res$psi)
 
 # perform the measurement many times and plot the outcome
-dist = replicate(1000, which(as.logical(measure(z)@coefs)))
-hist(dist, xaxt="n", xlab="State")
-axis(side=1, at=1:4, labels=z@basis)
+dist = measure(z, rep=1000)
+hist(dist)
 ```
