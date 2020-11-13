@@ -1,4 +1,4 @@
 #!/bin/bash
 
-Rscript -e "library(methods); devtools::document()"
+Rscript -e "library(methods); if(!require(devtools)) install.packages('devtools'); devtools::document()"
 R CMD INSTALL .
