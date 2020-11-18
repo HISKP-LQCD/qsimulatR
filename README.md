@@ -19,7 +19,7 @@ You might have to install additional packages. Just use `install.packages()` for
 
 The `install` script might not work under Windows. To circumvent this, you can download the source package from `github`. Then
 ```
-install.packages("qsimulatR.tar", repos=NULL, type="source")
+install.packages("qsimulatR.zip", repos=NULL, type="source")
 ```
 
 The library `qsimulatR` is now available in your R installation and can be loaded with:
