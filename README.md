@@ -17,6 +17,11 @@ Execute:
 ```
 You might have to install additional packages. Just use `install.packages()` for any packages recommended in a possible error message.
 
+The `install` script might not work under Windows. To circumvent this, you can download the source package from `github`. Then
+```
+install.packages("qsimulatR.tar", repos=NULL, type="source")
+```
+
 The library `qsimulatR` is now available in your R installation and can be loaded with:
 ```
 library(qsimulatR)
