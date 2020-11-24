@@ -39,7 +39,8 @@ qft <- function(x, inverse=FALSE, bits) {
   
   y <- x
   sign <- +1
-  if(inverse) sign <- -1
+  if(is.numeric(inverse)) sign <- inverse
+  else if(inverse) sign <- -1
   for(bit in rev(seq_along(bits))) {
     y <- H(bits[bit]) * y
     if(bit > 1) {
@@ -102,7 +103,8 @@ cqft <- function(c, x, inverse=FALSE, bits) {
 
   y <- x
   sign <- +1
-  if(inverse) sign <- -1
+  if(is.numeric(inverse)) sign <- inverse
+  else if(inverse) sign <- -1
   for(bit in rev(seq_along(bits))) {
     y <- cqgate(bits=c(c, bits[bit]), gate=H(bits[bit])) * y
     if(bit > 1) {
