@@ -9,10 +9,11 @@
 #' toffoli or CCNOT, CSWAP). qsimulatR supports plotting
 #' of circuits and is able to export circuits into IBM's Qiskit python
 #' language, which can be run on IBM's real quantum hardware.
-#'
+#' qsimulatR currently works for up to 24 qubits.
+#' 
 #' @name qsimulatR
 #' @docType package
-#' @author Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
+#' @author Johann Ostemeyer, Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #'
 #' @keywords package
 NULL

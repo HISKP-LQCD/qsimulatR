@@ -11,7 +11,7 @@ Authors@R:
              family = "Urbach",
              role = c("aut", "cre"),
              email = "urbach@hiskp.uni-bonn.de"))
-Description: A quantum computer simulator framework. It allows to
+Description: A quantum computer simulator framework with up to 24 qubits. It allows to
     define general single qubit gates and general controlled single
     qubit gates. For convenience, it currently provides the
     most common gates (X, Y, Z, H, Z, S, T, Rz, CNOT, SWAP, Toffoli or
