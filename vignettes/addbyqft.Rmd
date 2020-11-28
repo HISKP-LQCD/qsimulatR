@@ -8,6 +8,10 @@ vignette: >
   %\VignetteIndexEntry{Addition by Fourier transform}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
+
+bibliography: bibliography.bib
+link-citation: true
+reference-section-title: References
 ---
 
 ```{r echo=FALSE}
@@ -17,8 +21,8 @@ knitr::opts_chunk$set(fig.align='center',
                       comment='')
 ```
 
-This corresponds to problem 5.6 in Nielsen & Chuang. The original
-paper is arXiv:quant-ph/0008033, building on arXiv:9511018.
+This corresponds to problem 5.6 in Nielsen & Chuang.
+The original paper is [@draper2000addition].
 Which quantum
 circuit can be used to perform the computation
 \[

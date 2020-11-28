@@ -8,6 +8,11 @@ vignette: >
   %\VignetteIndexEntry{Exponentiation modulo n}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
+
+bibliography: bibliography.bib
+link-citation: true
+reference-section-title: References
+
 ---
 
 ```{r echo=FALSE}
@@ -18,8 +23,8 @@ knitr::opts_chunk$set(fig.align='center',
 ```
 
 Note that for this we roughly follow the paper by Vedral, Barenco and
-Ekert (arXiv:quant-ph/0008033, building on arXiv:9511018). However, we
-use the addition by qft instead of 
+Ekert [-@Vedral_1996]. However, we
+use the addition by qft instead [@draper2000addition] of 
 the procedure using Toffoli gates.
 
 ## Multiplication modulo $2^n$
