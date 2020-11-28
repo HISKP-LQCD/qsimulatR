@@ -1,6 +1,6 @@
 Package: qsimulatR
 Version: 1.0
-Date: 2020-09-03
+Date: 2020-12-01
 Title: A Quantum Computer Simulator in R
 Authors@R: 
     c(person(given = "Johann",
