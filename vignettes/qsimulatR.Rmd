@@ -228,7 +228,7 @@ result of which is stored again as a `qstate` object in `res$psi`.
 Such a measurement can be repeated, say 1000 times, for qubit 3
 
 ```{r, fig.align="center"}
-rv <- measure(y, 3, rep=1000)
+rv <- measure(y, 3, rep=1000)$value
 hist(rv, freq=FALSE, main="Probability for Qubit 3")
 ```
 
