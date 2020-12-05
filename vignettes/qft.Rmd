@@ -164,8 +164,10 @@ Ri <- function(bit, i, sign=+1) {
 ```
 
 With this gate we can implement the quantum Fourier trafo function
+(the following function is almost identical to the `qft` function
+included in `qsimulatR`, see `?qft` for details)
 
-```{r}
+```{r, eval=FALSE}
 qft <- function(x, inverse=FALSE) {
   n <- x@nbits
   y <- x
