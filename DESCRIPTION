@@ -1,7 +1,7 @@
 Package: qsimulatR
 Version: 1.0
-Date: 2020-12-01
-Title: A Quantum Computer Simulator in R
+Date: 2020-12-06
+Title: A Quantum Computer Simulator
 Authors@R: 
     c(person(given = "Johann",
              family = "Ostmeyer",
@@ -25,7 +25,7 @@ Suggests:
     knitr,
     markdown,
     rmarkdown
-License: GPL-3 + file LICENSE
+License: GPL-3
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
 RoxygenNote: 7.1.1
@@ -41,6 +41,7 @@ Collate:
     'cqgate.R'
     'export2qiskit.R'
     'measure.R'
+    'phase_estimation.R'
     'plot-qstate.R'
     'qft.R'
     'qsimulatR-package.R'

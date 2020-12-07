@@ -10,7 +10,7 @@
 #'
 #' @details
 #' Currently the following gates can be exported: H, X, Y, Z, S,
-#' Tgate, Rz, CNOT, SWAP, CCNOT, CSWAP, measure.
+#' Tgate, Rz, Rx, Ry, CNOT, SWAP, CCNOT, CSWAP, measure.
 #' 
 #' @param object a qstate object
 #' @param varname character. The name of the circuit variable
@@ -80,7 +80,16 @@ export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FA
                           if(gates[[i]]$type == "Rz" || grepl("^R[0-9]+", gates[[i]]$type)){
                             if(gates[[i]]$controlled) "crz"
                             else "rz"
-                          } else{
+                          }
+                          else if(gates[[i]]$type == "Rx") {
+                            if(gates[[i]]$controlled) "crx"
+                            else "rx"
+                          }
+                          else if(gates[[i]]$type == "Ry") {
+                            if(gates[[i]]$controlled) "cry"
+                            else "ry"
+                          }
+                          else{
                             warning("Gate of type '", gates[[i]]$type, "' is not supported!")
                             olines <- c(olines, paste0("# ", varname, ".", gates[[i]]$type, "(", op.bits,
                                                        ") ## WARNING: Not properly exported, interpret as pseudocode!"))
@@ -89,7 +98,7 @@ export2qiskit <- function(object, varname="qc", filename="circuit.py", append=FA
                         })
 
       op.gate <- paste0(op.gate, "(")
-      if(gates[[i]]$type == "Rz" || grepl("^R[0-9]+", gates[[i]]$type))
+      if(gates[[i]]$type == "Rx" || gates[[i]]$type == "Ry" || gates[[i]]$type == "Rz" || grepl("^R[0-9]+", gates[[i]]$type))
         op.gate <- paste0(op.gate, gates[[i]]$angle, ", ")
 
       olines <- c(olines, paste0(varname, ".", op.gate, op.bits, ")"))

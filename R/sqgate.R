@@ -71,7 +71,7 @@ setMethod("*", c("sqgate", "qstate"),
             circuit <- e2@circuit
             ngates <- length(circuit$gatelist)
             circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
-            if(e1@type == "Rz" || grepl("^R[0-9]+", e1@type))
+            if(e1@type == "Rx" || e1@type == "Ry" || e1@type == "Rz" || grepl("^R[0-9]+", e1@type))
               circuit$gatelist[[ngates+1]]$angle <- Arg(e1@M[2,2])
             circuit$gatelist[[ngates+1]]$controlled <- FALSE
             return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
@@ -108,6 +108,38 @@ H <- function(bit) {
 Id <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id"))
 }
+#' The Rx gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#' @param theta numeric. angle
+#' 
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- Rx(1, pi/4) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Rx <- function(bit, theta=0.) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), -1i*sin(theta/2), -1i*sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Rx"))
+}
+#' The Ry gate
+#' 
+#' @param bit integer. The bit to which to apply the gate
+#' @param theta numeric. angle
+#' 
+#' @examples
+#' x <- qstate(nbits=2)
+#' z <- Ry(1, pi/4) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+Ry <- function(bit, theta=0.) {
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), sin(theta/2), -sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Ry"))
+}
 #' The Rz gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -124,6 +156,7 @@ Id <- function(bit) {
 Rz <- function(bit, theta=0.) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2)), type="Rz"))
 }
+
 
 #' The Ri gate
 #'

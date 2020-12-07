@@ -73,7 +73,7 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                 ## single qubit gates
                 if(is.na(gatelist[[i]]$bits[2])) {
                   type <- gatelist[[i]]$type
-                  if(gatelist[[i]]$type == "Rz") {
+                  if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
                     type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                   }
                   legend(x=ipos[gatelist[[i]]$bits[1]], y=n+1-gatelist[[i]]$bits[1],
@@ -89,7 +89,7 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                   if(!is.null(gatelist[[i]]$controlled)) {
                     if(gatelist[[i]]$controlled) {
                       type <- gatelist[[i]]$type
-                      if(gatelist[[i]]$type == "Rz") {
+                      if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
                         type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                       }
                       points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)

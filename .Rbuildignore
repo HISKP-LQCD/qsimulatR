@@ -3,5 +3,6 @@ document
 qsimulatR.pdf
 vignettes/circuit.py
 circuit.py
+LICENSE
 ^doc$
 ^Meta$
