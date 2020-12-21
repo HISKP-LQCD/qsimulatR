@@ -58,22 +58,22 @@ probabilistic algorithms. As such, `R` could be the natural language
 to analyse the corresponding results. The package `qsimulatR`
 presented here provides a quantum simulator which allows one to
 implement quantum circuits in `R`. `qsimulatR` uses `S4` classes to
-implement quantum state manipulations intuitively via multiplcations
+implement quantum state manipulations intuitively via multiplications
 `*`. 
 
 General single qubit gates and general controlled single qubit gates
 can be easily defined. For convenience, it currently directly provides
-most common gates (X, Y, Z, H, Z, S, T, Rx, Ry, Rz, CNOT, SWAP,
+the most common gates (X, Y, Z, H, Z, S, T, Rx, Ry, Rz, CNOT, SWAP,
 toffoli or CCNOT, CSWAP). `qsimulatR` supports plotting
 of quantum circuits.
 
 Since one important platform for real quantum devices is given by
 `qiskit`, `qsimulatR` is able to export circuits into `qiskit`.
-The such exported code can in principle be run on directly
+The such exported code can in principle be run directly
 on IBM's real quantum hardware.
 
 We have developed `qsimulatR` for a lecture on _Quantum Computing_
-tought at the University of Bonn, Germany. It is available on CRAN
+taught at the University of Bonn, Germany. It is available on CRAN
 since last week.
 
 ## A quantum state
@@ -103,7 +103,7 @@ CatInBox
 ```
 
 and also the coefficients of the separate basis states can be set,
-even thought that is not realistic on a real quantum device and should
+even though that is not realistic on a real quantum device and should
 be avoided for other than testing purposes
 
 ```{r}
@@ -113,7 +113,7 @@ CatInBox
 ```
 
 Quantum circuits can be visualised very easily. Each qubit is
-represented by a vertical line. In `qsimulatR` a circuit can be
+represented by a horizontal line. In `qsimulatR` a circuit can be
 plotted by plotting a `qstate` object.
 If no gate was applied yet, the corresponding image is not very interesting
 
@@ -181,7 +181,11 @@ is not unitary, an error will the thrown.
 
 ### Truth Table
 
-Sometimes it is useful to look at the quantum analogon of a truth table of a gate as it immediately shows how every qubit is influenced depending on the other qubits. It can provide a consistency check for a newly implemented gate, too. The truth table of a single qubit gate (here the `X` gate) can be obtained as follows
+Sometimes it is useful to look at the quantum analogon of a truth table of a 
+gate as it immediately shows how every qubit is influenced depending on the 
+other qubits. It can provide a consistency check for a newly implemented gate, 
+too. The truth table of a single qubit gate (here the `X` gate) can be obtained 
+as follows
 
 ```{r}
 truth.table(X, 1)
@@ -190,7 +194,7 @@ truth.table(X, 1)
 ## Multi-qubit gates
 
 For universal quantum computing more than single qubit gates are
-neccessary. The most important two-qubit gate is the controlled `NOT`
+necessary. The most important two-qubit gate is the controlled `NOT`
 or `CNOT` gate. It has the truth table
 
 ```{r}
@@ -227,7 +231,7 @@ object of S4 class `cqgate`. Note that a similar function `sqgate` for
 single qubit gates is available. The `gate` argument to `cqgate` can
 be any `sqgate` object.
 
-Another widely used two-qubit gate is the `SWAP` gate, which swappes
+Another widely used two-qubit gate is the `SWAP` gate, which swaps
 two qubits, in the following example the first and the second qubit:
 
 ```{r, fig.align="center"}
@@ -340,10 +344,10 @@ y <- qft(y, bits=c(2:4), inverse=FALSE)
 plot(y)
 ```
 
-For more details we refer to the `qsimulatR` vignette. Based on the
+For more details we refer to the `qft` vignette. Based on the
 qFT algorithm the **phase estimation** algorithm can be defined. It is
 implemented in `qsimulatR` as the function `phase_estimation`. The
-phase estimation allows to estimate phase of eigenvalues of unitary
+phase estimation allows to estimate the phase of eigenvalues of unitary
 operators (all eigenvalues $\lambda=e^{2\pi i\varphi}$ of unitary
 operators $U$ have modulus 1, i.e. $|\lambda| = 1$). In order to call the
 `phase_estimation` function, a wrapper function for the unitary
@@ -374,7 +378,7 @@ argument to `phase_estimation`.
 
 `X` has eigenvalues $\lambda_\pm=\pm1$. Thus, the corresponding
 phases are $\varphi = 0$ and $\varphi= 1/2$. Both can be represented
-as binary fraction with a single bit exactly. Here we use $t=2$ qubits
+as binary fractions with a single bit exactly. Here we use $t=2$ qubits
 in the call of `phase_estimation` determined by the length of the
 `bitmask` argument to the function. In addition, the phase estimation
 procedure needs a trial state. If possible, this trial state should be
@@ -406,7 +410,7 @@ x
 and $\varphi=0.10 = 1/2$. More details and a more complex example can
 be found in the `qsimulatR` vignette on `phase_estimation`.
 
-# Export ot Qiskit
+# Export to Qiskit
 
 IBM provides quantum computing platforms, which can be freely
 used. However, one needs to programme in python using the `qiskit`
