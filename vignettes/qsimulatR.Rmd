@@ -6,15 +6,15 @@ date: "20. Dec. 2020"
 output:
   rmarkdown::html_vignette
 
-  html_document:
-    theme: readable
-    df_print: paged
-    toc: yes
-    toc_depth: '2'
-    number_sections: yes
-    highlight: tango
-    toc_float: yes
-    code_folding: show
+#  html_document:
+#    theme: readable
+#    df_print: paged
+#    toc: yes
+#    toc_depth: '2'
+#    number_sections: yes
+#    highlight: tango
+#    toc_float: yes
+#    code_folding: show
 
 vignette: >
   %\VignetteIndexEntry{qsimulatR}
@@ -23,9 +23,9 @@ vignette: >
 
 link_citation: yes
 mainfont: XCharter
-lang: de-DE
 bibliography: bibliography.bib
 fontsize: 14pt
+reference-section-title: References
 ---
 
 ```{r echo=FALSE}
@@ -51,6 +51,8 @@ state** composed out of qubits. Such states can be manipulated via
 **unitary quantum gates**. Classical information can be retrieved by
 performing (projective) **measurements**.
 
+For a comprehensive introduction and discussion see [@nielsenchuan].
+
 # qsimulatR Package
 
 By the nature of quantum mechanics, quantum algorithms are
@@ -73,8 +75,10 @@ The such exported code can in principle be run directly
 on IBM's real quantum hardware.
 
 We have developed `qsimulatR` for a lecture on _Quantum Computing_
-taught at the University of Bonn, Germany. It is available on CRAN
-since last week.
+taught at the University of Bonn, Germany, during winter term 2020. It
+is available on [CRAN](https://cran.r-project.org/)
+since last week. The most up-to-date version can be obtained from the
+`github` [repository](https://github.com/HISKP-LQCD/qsimulatR).
 
 ## A quantum state
 
@@ -181,7 +185,7 @@ is not unitary, an error will the thrown.
 
 ### Truth Table
 
-Sometimes it is useful to look at the quantum analogon of a truth table of a 
+Sometimes it is useful to look at the quantum analogue of a truth table of a 
 gate as it immediately shows how every qubit is influenced depending on the 
 other qubits. It can provide a consistency check for a newly implemented gate, 
 too. The truth table of a single qubit gate (here the `X` gate) can be obtained 
@@ -325,7 +329,7 @@ for values $0$ and $1$, which is well reproduced.
 
 The quantum Fourier transformation (qFT) is an important building
 block of many algorithms. `qsimulatR` provides an implementation of
-qFT via the `qft` function.
+qFT over $\mathbb{Z}_{2^n}$ via the `qft` function.
 
 ```{r}
 y <- qstate(3)
@@ -436,3 +440,8 @@ works for standard quantum gates, not for customary defined ones.
 ```{r, echo=FALSE, results=FALSE}
 file.remove(filename)
 ```
+
+# Outlook
+
+So far, we have not yet included any noise models in `qsimulatR`. This
+might be added in the near future. 
