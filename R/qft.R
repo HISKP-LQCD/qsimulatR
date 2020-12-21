@@ -51,8 +51,10 @@ qft <- function(x, inverse=FALSE, bits) {
   }
   ## reverse order
   n <- length(bits)
-  for(k in c(1:floor(n/2))) {
-    y <- SWAP(c(bits[k], bits[n-(k-1)])) * y
+  if(n > 1) {
+    for(k in c(1:floor(n/2))) {
+      y <- SWAP(c(bits[k], bits[n-(k-1)])) * y
+    }
   }
   return(invisible(y))
 }
