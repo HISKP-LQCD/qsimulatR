@@ -74,7 +74,13 @@ setMethod("*", c("sqgate", "qstate"),
             if(e1@type == "Rx" || e1@type == "Ry" || e1@type == "Rz" || grepl("^R[0-9]+", e1@type))
               circuit$gatelist[[ngates+1]]$angle <- Arg(e1@M[2,2])
             circuit$gatelist[[ngates+1]]$controlled <- FALSE
-            return(qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit))
+
+            result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit)
+            if(e1@type == "ERR" || ! (bit %in% e2@noise$bits) || e2@noise$p < runif(1)){
+              return(result)
+            }else{
+              return(noise(bit, error=e2@noise$error) * result)
+            }
           }
           )
 
@@ -93,6 +99,7 @@ setMethod("*", c("sqgate", "qstate"),
 H <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2), type="H"))
 }
+
 #' The identity gate
 #'
 #' @param bit integer. The bit to which to apply the gate
@@ -108,6 +115,7 @@ H <- function(bit) {
 Id <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id"))
 }
+
 #' The Rx gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -124,6 +132,7 @@ Id <- function(bit) {
 Rx <- function(bit, theta=0.) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), -1i*sin(theta/2), -1i*sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Rx"))
 }
+
 #' The Ry gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -140,6 +149,7 @@ Rx <- function(bit, theta=0.) {
 Ry <- function(bit, theta=0.) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), sin(theta/2), -sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Ry"))
 }
+
 #' The Rz gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -191,6 +201,7 @@ Ri <- function(bit, i, sign=+1) {
                       M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))),
                               dim=c(2,2)), type=type))
 }
+
 #' The S gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -206,6 +217,7 @@ Ri <- function(bit, i, sign=+1) {
 S <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2)), type="S"))
 }
+
 #' The Tgate gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -221,6 +233,7 @@ S <- function(bit) {
 Tgate <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2)), type="T"))
 }
+
 #' The X gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -236,6 +249,7 @@ Tgate <- function(bit) {
 X <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2)), type="X"))
 }
+
 #' The Y gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -251,6 +265,7 @@ X <- function(bit) {
 Y <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., -1i, 1i, 0.)), dim=c(2,2)), type="Y"))
 }
+
 #' The Z gate
 #' 
 #' @param bit integer. The bit to which to apply the gate
@@ -265,4 +280,54 @@ Y <- function(bit) {
 #' @export
 Z <- function(bit) {
   return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2)), type="Z"))
+}
+
+
+sample.from.sphere <- function(r=1, d=4){
+  v <- rnorm(d)
+  w <- r*v/sqrt(sum(v^2))
+  return(w)
+}
+sample.from.su2 <- function(){
+  w <- sample.from.sphere()
+  coefs <- c(w[1] + 1i*w[2], w[3] + 1i*w[4],
+            -w[3] + 1i*w[4], w[1] - 1i*w[2])
+  return(coefs)
+}
+
+#' A noise gate
+#' 
+#' @param bit integer or integer array. The bit to which to apply the gate. If 
+#' an array is provided, the gate will be applied randomly to one of the bits 
+#' only.
+#' @param p probability with which noise is applied
+#' @param error one of "X", "Y", "Z" or "any". The model which the noise 
+#' follows. Can be one of the Pauli matrices or an arbitrary, uniformly 
+#' sampled, SU(2)-matrix.
+#' @param type a character vector representing the type of gate
+#'
+#' @examples
+#' x <- noise(1, error="X") * qstate(nbits=2)
+#' x
+#' z <- noise(2, p=0.5) * x
+#' z
+#' 
+#' @return
+#' An S4 class 'sqgate' object is returned
+#' @export
+noise <- function(bit, p=1, error="any", type="ERR") {
+  if(length(bit) > 1){
+    bit <- sample(bit, 1)
+  }
+  if(runif(1) > p){
+    mat <- c(1, 0, 0, 1)
+  }else{
+    mat <- switch(error,
+                 "X" = c(0, 1, 1, 0),
+                 "Y" = c(0, -1i, 1i, 0),
+                 "Z" = c(1, 0, 0, -1),
+                 "any" = sample.from.su2()
+                 )
+  }
+  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(mat), dim=c(2,2)), type=type))
 }
