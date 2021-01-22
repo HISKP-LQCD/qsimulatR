@@ -76,7 +76,7 @@ setMethod("*", c("ccqgate", "qstate"),
             if(e1@gate@type == "Rx" || e1@gate@type == "Ry" || e1@gate@type == "Rz") circuit$gatelist[[ngates+1]]$angle <- -Re(2*1i*log(e1@M[2,2]))
             circuit$gatelist[[ngates+1]]$controlled <- TRUE
             
-            result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, circuit=circuit)
+            result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, noise=e2@noise, circuit=circuit)
             if(e1@type == "ERR" || ! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(result)
             }else{
