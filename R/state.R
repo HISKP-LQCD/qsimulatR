@@ -107,6 +107,9 @@ qstatecoefs <- function(y) {
 #' @slot basis String or vector of strings. A single string will be interpreted 
 #' as the \code{collapse}-parameter in \code{genComputationalBasis}. A vector 
 #' of length 2^nbits yields the basis directly.
+#' @slot noise List containing the probability \code{p} some noise is applied 
+#' to one of the \code{bits} after a gate application and the model 
+#' \code{error} of this noise. See function \code{noise} for details.
 #' @slot circuit List containing the number of non-quantum bits \code{ncbits}
 #' and a list of gates \code{gatelist} applied to the original state.
 #' Filled automatically as gates are applied, required for plotting.
@@ -124,6 +127,9 @@ qstatecoefs <- function(y) {
 #'
 #' x <- qstate(nbits=1, coefs=as.complex(sqrt(rep(0.5, 2))), basis=c("|dead>", "|alive>"))
 #' x
+#'
+#' x <- qstate(nbits=2, noise=list(p=1, bits=1:2, error="any"))
+#' Id(2) * x
 #' 
 #' @name qstate
 #' @rdname qstate
@@ -133,10 +139,12 @@ setClass("qstate",
          representation(nbits="integer",
                         coefs="complex",
                         basis="character",
+                        noise="list",
                         circuit="list"),
          prototype(nbits=1L,
                    coefs=c(1. + 0i, 0i),
                    basis=genComputationalBasis(1L),
+                   noise=list(p=0, bits=1, error="any"),
                    circuit=list(ncbits=0, gatelist=list())),
          validity=check_qstate)
 
@@ -145,10 +153,12 @@ setClass("qstate",
 qstate <- function(nbits=1L,
                    coefs=c(1+0i, rep(0i, times=2^nbits-1)),
                    basis=genComputationalBasis(nbits=nbits),
+                   noise=list(p=0, bits=1:nbits, error="any"),
                    circuit=list(ncbits=0, gatelist=list())) {
   return(methods::new("qstate", nbits=as.integer(nbits),
                       coefs=normalise(coefs),
                       basis=as.character(basis),
+                      noise=noise,
                       circuit=circuit))
 }
 
