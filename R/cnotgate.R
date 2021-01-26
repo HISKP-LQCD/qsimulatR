@@ -47,7 +47,7 @@ setMethod("*", c("cnotgate", "qstate"),
             stopifnot(length(e1@bits) == 2)
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
             stopifnot(e1@bits[1] != e1@bits[2])
-			bits <- e1@bits
+            bits <- e1@bits
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
             cb <- is.bitset(al, bit=bits[1])
@@ -63,7 +63,7 @@ setMethod("*", c("cnotgate", "qstate"),
             if(! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(e2)
             }else{
-              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error) * e2)
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * e2)
             }
           }
           )

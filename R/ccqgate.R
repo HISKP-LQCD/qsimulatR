@@ -80,7 +80,7 @@ setMethod("*", c("ccqgate", "qstate"),
             if(e1@type == "ERR" || ! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(result)
             }else{
-              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error) * result)
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * result)
             }
           }
           )

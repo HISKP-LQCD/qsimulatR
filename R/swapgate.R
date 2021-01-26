@@ -44,18 +44,23 @@ setMethod("*", c("swapgate", "qstate"),
             stopifnot(length(e1@bits) == 2)
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
             stopifnot(e1@bits[1] != e1@bits[2])
+            bits <- e1@bits
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
-            b1 <- is.bitset(al, bit=e1@bits[1])
-            b2 <- is.bitset(al, bit=e1@bits[2])
+            b1 <- is.bitset(al, bit=bits[1])
+            b2 <- is.bitset(al, bit=bits[2])
             x <- which(b1 & !b2)
             y <- which(!b1 & b2)
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
-            e2@circuit$gatelist[[ngates+1]] <- list(type="SWAP", bits=c(e1@bits, NA))
+            e2@circuit$gatelist[[ngates+1]] <- list(type="SWAP", bits=c(bits, NA))
 
-            return(e2)
+            if(! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
+              return(e2)
+            }else{
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * e2)
+            }
           }
           )
 
@@ -113,18 +118,23 @@ setMethod("*", c("cswapgate", "qstate"),
             stopifnot(length(e1@bits) == 3)
             stopifnot(length(e1@bits) == length(unique(e1@bits)))
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
+            bits <- e1@bits
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
-            cb <- is.bitset(al, bit=e1@bits[1]) 
-            b1 <- is.bitset(al, bit=e1@bits[2])
-            b2 <- is.bitset(al, bit=e1@bits[3])
+            cb <- is.bitset(al, bit=bits[1]) 
+            b1 <- is.bitset(al, bit=bits[2])
+            b2 <- is.bitset(al, bit=bits[3])
             x <- which(cb & (b1 & !b2))
             y <- which(cb & (!b1 & b2))
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
-            e2@circuit$gatelist[[ngates+1]] <- list(type="CSWAP", bits=c(e1@bits))
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CSWAP", bits=c(bits))
 
-            return(e2)
+            if(! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
+              return(e2)
+            }else{
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * e2)
+            }
           }
           )
