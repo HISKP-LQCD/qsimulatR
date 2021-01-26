@@ -79,7 +79,7 @@ setMethod("*", c("sqgate", "qstate"),
             if(e1@type == "ERR" || ! (bit %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(result)
             }else{
-              return(noise(bit, error=e2@noise$error) * result)
+              return(noise(bit, error=e2@noise$error, args=e2@noise$args) * result)
             }
           }
           )
@@ -288,11 +288,20 @@ sample.from.sphere <- function(r=1, d=4){
   w <- r*v/sqrt(sum(v^2))
   return(w)
 }
-sample.from.su2 <- function(){
-  w <- sample.from.sphere()
+s3.to.su2 <- function(w){
   coefs <- c(w[1] + 1i*w[2], w[3] + 1i*w[4],
             -w[3] + 1i*w[4], w[1] - 1i*w[2])
   return(coefs)
+}
+sample.from.su2 <- function(){
+  w <- sample.from.sphere()
+  return(s3.to.su2(w))
+}
+sample.around.id <- function(sigma=1){
+  v <- rnorm(3, sd=sigma)
+  alpha <- sqrt(sum(v^2))
+  w <- c(cos(alpha), sin(alpha)/alpha*v)
+  return(s3.to.su2(w))
 }
 
 #' A noise gate
@@ -301,21 +310,27 @@ sample.from.su2 <- function(){
 #' an array is provided, the gate will be applied randomly to one of the bits 
 #' only.
 #' @param p probability with which noise is applied
-#' @param error one of "X", "Y", "Z" or "any". The model which the noise 
-#' follows. Can be one of the Pauli matrices or an arbitrary, uniformly 
-#' sampled, SU(2)-matrix.
+#' @param error one of "X", "Y", "Z", "small" or "any". The model which the noise 
+#' follows. Can be one of the Pauli matrices (X,Y,Z), a random SU(2)-matrix 
+#' with a small deviation \code{sigma} from the identity ("small") or an 
+#' arbitrary, uniformly sampled, SU(2)-matrix ("any").
 #' @param type a character vector representing the type of gate
+#' @param args a list of further arguments passed to specific error models. For 
+#' \code{error="small"} the standard deviation \code{sigma} has to be provided 
+#' here (default=1).
 #'
 #' @examples
 #' x <- noise(1, error="X") * qstate(nbits=2)
 #' x
-#' z <- noise(2, p=0.5) * x
+#' y <- noise(2, p=0.5) * x
+#' y
+#' z <- noise(2, error="small", args=list(sigma=0.1)) * x
 #' z
 #' 
 #' @return
 #' An S4 class 'sqgate' object is returned
 #' @export
-noise <- function(bit, p=1, error="any", type="ERR") {
+noise <- function(bit, p=1, error="any", type="ERR", args=list()) {
   if(length(bit) > 1){
     bit <- sample(bit, 1)
   }
@@ -326,6 +341,7 @@ noise <- function(bit, p=1, error="any", type="ERR") {
                  "X" = c(0, 1, 1, 0),
                  "Y" = c(0, -1i, 1i, 0),
                  "Z" = c(1, 0, 0, -1),
+                 "small" = do.call(sample.around.id, args),
                  "any" = sample.from.su2()
                  )
   }
