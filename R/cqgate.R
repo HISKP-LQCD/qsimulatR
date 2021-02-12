@@ -78,7 +78,7 @@ setMethod("*", c("cqgate", "qstate"),
             circuit$gatelist[[ngates+1]]$controlled <- TRUE
             
             result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, noise=e2@noise, circuit=circuit)
-            if(e1@type == "ERR" || ! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
+            if(e1@gate@type == "ERR" || ! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(result)
             }else{
               return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * result)
