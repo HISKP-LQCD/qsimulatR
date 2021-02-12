@@ -101,7 +101,7 @@ genComputationalBasis <- function(nbits, collapse="") {
 #'
 #' @param nbits integer. The number of qubits
 #' @param p probability with which noise is applied after every gate
-#' @param bit integer or integer array. The bit to which to apply the gate.
+#' @param bits integer or integer array. The bit to which to apply the gate.
 #' @param error String containing the error model.
 #' @param ... Additional arguments to be stored in \code{args}.
 #'

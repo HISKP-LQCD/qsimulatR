@@ -319,6 +319,8 @@ sample.around.id <- function(sigma=1){
 #' \code{error="small"} the standard deviation \code{sigma} has to be provided 
 #' here (default=1).
 #'
+#' @importFrom stats rnorm
+#' 
 #' @examples
 #' x <- noise(1, error="X") * qstate(nbits=2)
 #' x
