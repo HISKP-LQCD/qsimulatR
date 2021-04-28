@@ -84,9 +84,11 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                 }
                 ## multi qubit gates
                 else {
-                  xp <- max(ipos)
-                  ipos[1:n] <- xp + 1 
-                  if(!is.null(gatelist[[i]]$controlled)) {
+				  temp <- 0
+				  if(!is.na(gatelist[[i]]$bits[3])) { temp <- ipos[gatelist[[i]]$bits[3]] }
+                  xp <- max(c(ipos[gatelist[[i]]$bits[1]],ipos[gatelist[[i]]$bits[2]], temp))
+				  rm(temp)
+				  if(!is.null(gatelist[[i]]$controlled)) {
                     if(gatelist[[i]]$controlled) {
                       type <- gatelist[[i]]$type
                       if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
@@ -104,12 +106,13 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                     points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
                     points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
                     lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                  }
+				  }
                   if(gatelist[[i]]$type == "CCNOT") {
                     points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
                     points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
                     points(x=xp, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
                     lines(x=c(xp,xp), y=n+1-range(gatelist[[i]]$bits))
+					
                   }
                   if(gatelist[[i]]$type == "SWAP") {
                     points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=4, cex=2.5)
@@ -134,8 +137,13 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                            y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
                            length=0.1)
                   }
+				  ipos[gatelist[[i]]$bits[1]] <- xp + 1
+				  ipos[gatelist[[i]]$bits[2]] <- xp + 1
+				  if(!is.na(gatelist[[i]]$bits[3])) {
+						ipos[gatelist[[i]]$bits[3]] <- xp + 1
+				  }
                 }
               }
             }
-          }
-          )
+		}	
+		)
