@@ -85,9 +85,9 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                 ## multi qubit gates
                 else {
                   temp <- 0
-				          if(!is.na(gatelist[[i]]$bits[3])) { temp <- ipos[gatelist[[i]]$bits[3]] }
+		  if(!is.na(gatelist[[i]]$bits[3])) { temp <- ipos[gatelist[[i]]$bits[3]] }
                   xp <- max(c(ipos[gatelist[[i]]$bits[1]],ipos[gatelist[[i]]$bits[2]], temp))
-				          rm(temp)
+		  rm(temp)
                   if(!is.null(gatelist[[i]]$controlled)) {
                     if(gatelist[[i]]$controlled) {
                       type <- gatelist[[i]]$type
@@ -137,10 +137,10 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                            length=0.1)
                   }
                   ipos[gatelist[[i]]$bits[1]] <- xp + 1
-				          ipos[gatelist[[i]]$bits[2]] <- xp + 1
+		  ipos[gatelist[[i]]$bits[2]] <- xp + 1
                   if(!is.na(gatelist[[i]]$bits[3])) {
-						        ipos[gatelist[[i]]$bits[3]] <- xp + 1
-				            }
+			ipos[gatelist[[i]]$bits[3]] <- xp + 1
+			}
                 }
               }
             }
