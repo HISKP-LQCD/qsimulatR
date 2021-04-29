@@ -1,11 +1,11 @@
 check_sqgate  <- function(object) {
-  stopifnot(length(object@bit) == 1)
-  stopifnot(object@bit > 0)
-  stopifnot(all(dim(object@M) == c(2,2)))
-  ## check unitarity
-  X <- as.vector(object@M %*% t(Conj(object@M)))
-  stopifnot(all(Re(X- c(1,0,0,1)) < 1.e-12))
-  stopifnot(all(Im(X- c(1,0,0,1)) < 1.e-12))
+	stopifnot(length(object@bit) == 1)
+	stopifnot(object@bit > 0)
+	stopifnot(all(dim(object@M) == c(2,2)))
+	## check unitarity
+	X <- as.vector(object@M %*% t(Conj(object@M)))
+	stopifnot(all(Re(X- c(1,0,0,1)) < 1.e-12))
+	topifnot(all(Im(X- c(1,0,0,1)) < 1.e-12))
 }
 
 #' A single qubit gate
@@ -34,17 +34,17 @@ check_sqgate  <- function(object) {
 #' @aliases sqgate-class
 #' @exportClass sqgate
 setClass("sqgate",
-         representation(bit="integer",
-                        M="array",
-                        type="character"),
-         prototype(bit=c(1L),
-                   M=array(as.complex(c(1,0,0,1)), dim=c(2,2)),
-                   type="Id"),
-         validity=check_sqgate)
-
+			representation(bit="integer",
+			M="array",
+			type="character"),
+			prototype(bit=c(1L),
+			M=array(as.complex(c(1,0,0,1)), dim=c(2,2)),
+			type="Id"),
+			validity=check_sqgate)
+			
 #' @export
 sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id") {
-  return(methods::new("sqgate", bit=as.integer(bit), M=M, type=type))
+	return(methods::new("sqgate", bit=as.integer(bit), M=M, type=type))
 }
 
 #' times-sqgate-qstate
@@ -56,32 +56,31 @@ sqgate <- function(bit=1L, M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id
 #' @return
 #' An object of S4 class 'qstate'
 #'
-setMethod("*", c("sqgate", "qstate"),
-          function(e1, e2) {
-            stopifnot(e1@bit > 0 && e1@bit <= e2@nbits)
-            bit <- e1@bit
-            nbits <- e2@nbits
-            res <- c()
-            al <- 0:(2^e2@nbits-1)
-            ii <- is.bitset(al, bit=bit)
-            kk <- !ii
-            res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
-            res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
-            ## the gatelist needs to be extended for plotting
-            circuit <- e2@circuit
-            ngates <- length(circuit$gatelist)
-            circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
-            if(e1@type == "Rz" || grepl("^R[0-9]+", e1@type)){ circuit$gatelist[[ngates+1]]$angle <- 2*Arg(e1@M[2,2]) }
-			if(e1@type == "Ry" || e1@type == "Rx"){ circuit$gatelist[[ngates+1]]$angle <- 2*acos(Re(e1@M[2,2])) }
-            circuit$gatelist[[ngates+1]]$controlled <- FALSE
-            result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, noise=e2@noise, circuit=circuit)
-            if(e1@type == "ERR" || ! (bit %in% e2@noise$bits) || e2@noise$p < runif(1)){
-              return(result)
-            }else{
-              return(noise(bit, error=e2@noise$error, args=e2@noise$args) * result)
-            }
-          }
-          )
+setMethod("*", c("sqgate", "qstate"), function(e1, e2) {
+	stopifnot(e1@bit > 0 && e1@bit <= e2@nbits)
+	bit <- e1@bit
+	nbits <- e2@nbits
+	res <- c()
+	al <- 0:(2^e2@nbits-1)
+	ii <- is.bitset(al, bit=bit)
+	kk <- !ii
+	res[kk] <- e1@M[1,1]*e2@coefs[kk] + e1@M[1,2]*e2@coefs[ii]
+	res[ii] <- e1@M[2,1]*e2@coefs[kk] + e1@M[2,2]*e2@coefs[ii]
+	## the gatelist needs to be extended for plotting
+	circuit <- e2@circuit
+	ngates <- length(circuit$gatelist)
+	circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
+	if(e1@type == "Rz" || grepl("^R[0-9]+", e1@type)){ circuit$gatelist[[ngates+1]]$angle <- 2*Arg(e1@M[2,2]) }
+	if(e1@type == "Ry" || e1@type == "Rx"){ circuit$gatelist[[ngates+1]]$angle <- 2*acos(Re(e1@M[2,2])) }
+	circuit$gatelist[[ngates+1]]$controlled <- FALSE
+	result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, noise=e2@noise, circuit=circuit)
+	if(e1@type == "ERR" || ! (bit %in% e2@noise$bits) || e2@noise$p < runif(1)){
+		return(result)
+    }
+	else{
+		return(noise(bit, error=e2@noise$error, args=e2@noise$args) * result)
+    }
+})
 
 #' The Hadarmard gate
 #'
@@ -96,7 +95,7 @@ setMethod("*", c("sqgate", "qstate"),
 #' An S4 class 'sqgate' object is returned
 #' @export
 H <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2), type="H"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,1,1,-1)), dim=c(2,2))/sqrt(2), type="H"))
 }
 
 #' The identity gate
@@ -112,7 +111,7 @@ H <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Id <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1)), dim=c(2,2)), type="Id"))
 }
 
 #' The Rx gate
@@ -129,7 +128,7 @@ Id <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Rx <- function(bit, theta=0.) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), -1i*sin(theta/2), -1i*sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Rx"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), -1i*sin(theta/2), -1i*sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Rx"))
 }
 
 #' The Ry gate
@@ -146,7 +145,7 @@ Rx <- function(bit, theta=0.) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Ry <- function(bit, theta=0.) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), sin(theta/2), -sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Ry"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(cos(theta/2), sin(theta/2), -sin(theta/2), cos(theta/2))), dim=c(2,2)), type="Ry"))
 }
 
 #' The Rz gate
@@ -163,7 +162,7 @@ Ry <- function(bit, theta=0.) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Rz <- function(bit, theta=0.) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2)), type="Rz"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(exp(-1i*theta/2), 0, 0, exp(1i*theta/2))), dim=c(2,2)), type="Rz"))
 }
 
 
@@ -191,14 +190,13 @@ Rz <- function(bit, theta=0.) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Ri <- function(bit, i, sign=+1) {
-  type <- paste0("R", i)
-  if(sign < 0) {
-    type <- paste0("R", i, "dag")
-  }
-  return(methods::new("sqgate",
-                      bit=as.integer(bit),
-                      M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))),
-                              dim=c(2,2)), type=type))
+	type <- paste0("R", i)
+	if(sign < 0) {
+		type <- paste0("R", i, "dag")
+	}
+	return(methods::new("sqgate",
+			bit=as.integer(bit),
+			M=array(as.complex(c(1,0,0,exp(sign*2*pi*1i/2^i))), dim=c(2,2)), type=type))
 }
 
 #' The S gate
@@ -214,7 +212,7 @@ Ri <- function(bit, i, sign=+1) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 S <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2)), type="S"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1,0,0,1i)), dim=c(2,2)), type="S"))
 }
 
 #' The Tgate gate
@@ -230,7 +228,7 @@ S <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Tgate <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2)), type="T"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0, 0, exp(1i*pi/4))), dim=c(2,2)), type="T"))
 }
 
 #' The X gate
@@ -246,7 +244,7 @@ Tgate <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 X <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2)), type="X"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., 1., 1., 0.)), dim=c(2,2)), type="X"))
 }
 
 #' The Y gate
@@ -262,7 +260,7 @@ X <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Y <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., -1i, 1i, 0.)), dim=c(2,2)), type="Y"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(0., -1i, 1i, 0.)), dim=c(2,2)), type="Y"))
 }
 
 #' The Z gate
@@ -278,29 +276,29 @@ Y <- function(bit) {
 #' An S4 class 'sqgate' object is returned
 #' @export
 Z <- function(bit) {
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2)), type="Z"))
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(c(1., 0., 0., -1.)), dim=c(2,2)), type="Z"))
 }
 
 
 sample.from.sphere <- function(r=1, d=4){
-  v <- rnorm(d)
-  w <- r*v/sqrt(sum(v^2))
-  return(w)
+	v <- rnorm(d)
+	w <- r*v/sqrt(sum(v^2))
+	return(w)
 }
 s3.to.su2 <- function(w){
-  coefs <- c(w[1] + 1i*w[2], w[3] + 1i*w[4],
+	coefs <- c(w[1] + 1i*w[2], w[3] + 1i*w[4],
             -w[3] + 1i*w[4], w[1] - 1i*w[2])
-  return(coefs)
+	return(coefs)
 }
 sample.from.su2 <- function(){
-  w <- sample.from.sphere()
-  return(s3.to.su2(w))
+	w <- sample.from.sphere()
+	return(s3.to.su2(w))
 }
 sample.around.id <- function(sigma=1){
-  v <- rnorm(3, sd=sigma)
-  alpha <- sqrt(sum(v^2))
-  w <- c(cos(alpha), sin(alpha)/alpha*v)
-  return(s3.to.su2(w))
+	v <- rnorm(3, sd=sigma)
+	alpha <- sqrt(sum(v^2))
+	w <- c(cos(alpha), sin(alpha)/alpha*v)
+	return(s3.to.su2(w))
 }
 
 #' A noise gate
@@ -332,19 +330,19 @@ sample.around.id <- function(sigma=1){
 #' An S4 class 'sqgate' object is returned
 #' @export
 noise <- function(bit, p=1, error="any", type="ERR", args=list()) {
-  if(length(bit) > 1){
-    bit <- sample(bit, 1)
-  }
-  if(runif(1) > p){
-    mat <- c(1, 0, 0, 1)
-  }else{
+	if(length(bit) > 1){
+		bit <- sample(bit, 1)
+	}
+	if(runif(1) > p){
+		mat <- c(1, 0, 0, 1)
+	}
+	else{
     mat <- switch(error,
-                 "X" = c(0, 1, 1, 0),
-                 "Y" = c(0, -1i, 1i, 0),
-                 "Z" = c(1, 0, 0, -1),
-                 "small" = do.call(sample.around.id, args),
-                 "any" = sample.from.su2()
-                 )
-  }
-  return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(mat), dim=c(2,2)), type=type))
+					"X" = c(0, 1, 1, 0),
+					"Y" = c(0, -1i, 1i, 0),
+					"Z" = c(1, 0, 0, -1),
+					"small" = do.call(sample.around.id, args),
+					"any" = sample.from.su2())
+	}
+	return(methods::new("sqgate", bit=as.integer(bit), M=array(as.complex(mat), dim=c(2,2)), type=type))
 }
