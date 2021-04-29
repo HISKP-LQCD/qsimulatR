@@ -30,119 +30,129 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qubitnames=NULL, cbitnames=NULL)
 #' plot(z)
 #' 
 #' @exportMethod plot
-setMethod("plot", signature(x = "qstate", y = "missing"),
-          function(x, y, ...) {
-            nbits <- x@nbits
-            ncbits <- x@circuit$ncbits
-            n <- nbits + ncbits
-            ngates <- length(x@circuit$gatelist)
-            ## compute xlim first
-            ipos <- rep(1, times=n)
-            if(ngates > 0) {
-              gatelist <- x@circuit$gatelist
-              for(i in c(1:ngates)) {
-                if(is.na(gatelist[[i]]$bits[2])) {
-                  ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
-                }
-                else {
-                  ipos[1:n] <- max(ipos) + 1
-                }
-              }
-            }
-            xmax <- max(ipos)
-            ## prepare empty plot
-            plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
-            ## plot qubit lines
-            for(i in c(n:(ncbits+1))) {
-              lines(x=c(0.3, xmax), y=c(i, i))
-              annotate_bitnames(i=n-i+1, y=i, ...)
-            }
-            ## plot classical bit lines
-            if(ncbits > 0) {
-              for(i in c(ncbits:1)) {
-                lines(x=c(0.3, xmax), y=c(i-0.025, i-0.025))
-                lines(x=c(0.3, xmax), y=c(i+0.025, i+0.025))
-                annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
-              }
-            }
-            if(ngates > 0) {
-              ipos <- rep(1, times=n)
-              ## plot gates
-              gatelist <- x@circuit$gatelist
-              for(i in c(1:ngates)) {
-                ## single qubit gates
-                if(is.na(gatelist[[i]]$bits[2])) {
-                  type <- gatelist[[i]]$type
-                  if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
-                    type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
-                  }
-                  legend(x=ipos[gatelist[[i]]$bits[1]], y=n+1-gatelist[[i]]$bits[1],
-                         type, xjust=0.5, yjust=0.5,
-                         x.intersp=-0.5, y.intersp=0.1,
-                         bg="white")
-                  ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
-                }
-                ## multi qubit gates
-                else {
-                  temp <- 0
-		  if(!is.na(gatelist[[i]]$bits[3])) { temp <- ipos[gatelist[[i]]$bits[3]] }
-                  xp <- max(c(ipos[gatelist[[i]]$bits[1]],ipos[gatelist[[i]]$bits[2]], temp))
-		  rm(temp)
-                  if(!is.null(gatelist[[i]]$controlled)) {
-                    if(gatelist[[i]]$controlled) {
-                      type <- gatelist[[i]]$type
-                      if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
-                        type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
-                      }
-                      points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                      lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                      legend(x=xp, y=n+1-gatelist[[i]]$bits[2],
-                             type, xjust=0.5, yjust=0.5,
-                             x.intersp=-0.5, y.intersp=0.1,
-                             bg="white")
-                    }
-                  }
-                  if(gatelist[[i]]$type == "CNOT") {
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
-                    lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                  }
-                  if(gatelist[[i]]$type == "CCNOT") {
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
-                    lines(x=c(xp,xp), y=n+1-range(gatelist[[i]]$bits))
-                  }
-                  if(gatelist[[i]]$type == "SWAP") {
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=4, cex=2.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
-                    lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                  }                
-                  if(gatelist[[i]]$type == "CSWAP") {
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[3], pch=4, cex=2.5)
-                    lines(x=c(xp, xp), y=n+1-range(gatelist[[i]]$bits))
-                  }
-                  if(gatelist[[i]]$type == "measure") {
-                    lines(x=c(xp, xp), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
-                    points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                    legend(x=xp, y=ncbits+1-gatelist[[i]]$bits[2],
-                           "M", xjust=0.5, yjust=0.5,
-                           x.intersp=-0.5, y.intersp=0.1,
-                           bg="white")
-                    arrows(x0=xp-0.2, x1=xp+0.2,
-                           y0=ncbits+1-gatelist[[i]]$bits[2]-0.2,
-                           y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
-                           length=0.1)
-                  }
-                  ipos[gatelist[[i]]$bits[1]] <- xp + 1
-		  ipos[gatelist[[i]]$bits[2]] <- xp + 1
-                  if(!is.na(gatelist[[i]]$bits[3])) {
-			ipos[gatelist[[i]]$bits[3]] <- xp + 1
+setMethod("plot", signature(x = "qstate", y = "missing"), function(x, y, ...) {
+	nbits <- x@nbits
+	ncbits <- x@circuit$ncbits
+	n <- nbits + ncbits
+	ngates <- length(x@circuit$gatelist)
+	## compute xlim first
+	ipos <- rep(1, times=n)
+	if(ngates > 0) {
+		gatelist <- x@circuit$gatelist
+		for(i in c(1:ngates)) {
+			ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
+			for(j in 2:length(is.na(gatelist[[i]]$bits))){
+				if(!is.na(gatelist[[i]]$bits[j])){ ipos[gatelist[[i]]$bits[j]] <- ipos[gatelist[[i]]$bits[j]] + 1 }
 			}
-                }
-              }
+		}
+	}
+	xmax <- max(ipos)
+	## prepare empty plot
+	plot(NA, ann=FALSE, xlim=c(0,xmax+2), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+	## plot qubit lines
+	for(i in c(n:(ncbits+1))) {
+		lines(x=c(0.2, xmax+1.8), y=c(i, i))
+		annotate_bitnames(i=n-i+1, y=i, ...)
+    }
+	## plot classical bit lines
+	if(ncbits > 0) {
+		for(i in c(ncbits:1)) {
+			lines(x=c(0.2, xmax+1.8), y=c(i-0.025, i-0.025))
+			lines(x=c(0.2, xmax+1.8), y=c(i+0.025, i+0.025))
+			annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
+		}
+	}
+	if(ngates > 0) {
+		ipos <- rep(1, times=n)
+		## plot gates
+		gatelist <- x@circuit$gatelist
+		for(i in c(1:ngates)) {
+			if (i %in% x@circuit$equaly_xcoor)	{
+				ipos[1:n] <- max(ipos) 
+			}
+			## single qubit gates
+			if(is.na(gatelist[[i]]$bits[2])) {
+				type <- gatelist[[i]]$type
+				if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
+					type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
+				}
+				legend(x=ipos[gatelist[[i]]$bits[1]], y=n+1-gatelist[[i]]$bits[1],
+						type, xjust=0.5, yjust=0.5,x.intersp=-0.5, y.intersp=0.1, bg="white")
+				ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
             }
-          }
-          )
+			## multi qubit gates
+			else {
+				temp <- 0
+				if(!is.na(gatelist[[i]]$bits[3])) { temp <- ipos[gatelist[[i]]$bits[3]] }
+				xp <- max(c(ipos[gatelist[[i]]$bits[1]],ipos[gatelist[[i]]$bits[2]], temp))
+				rm(temp)
+				if(!is.null(gatelist[[i]]$controlled)) {
+					if(gatelist[[i]]$controlled) {
+						type <- gatelist[[i]]$type
+						if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
+							type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
+						}
+						points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+						lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+						legend(x=xp, y=n+1-gatelist[[i]]$bits[2],type, xjust=0.5, yjust=0.5,
+								x.intersp=-0.5, y.intersp=0.1, bg="white")
+					}
+				}
+				if(gatelist[[i]]$type == "CNOT") {
+					points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=10, cex=2.5)
+					lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+				}
+				if(gatelist[[i]]$type == "CCNOT") {
+					points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=19, cex=1.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[3], pch=10, cex=2.5)
+					lines(x=c(xp,xp), y=n+1-range(gatelist[[i]]$bits))
+				}
+				if(gatelist[[i]]$type == "SWAP") {
+					points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=4, cex=2.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
+					lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
+				}                
+				if(gatelist[[i]]$type == "CSWAP") {
+					points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[2], pch=4, cex=2.5)
+					points(x=xp, y=n+1-gatelist[[i]]$bits[3], pch=4, cex=2.5)
+					lines(x=c(xp, xp), y=n+1-range(gatelist[[i]]$bits))
+				}
+				if(gatelist[[i]]$type == "measure") {
+					lines(x=c(xp, xp), y=c(n+1-gatelist[[i]]$bits[1], ncbits+1-gatelist[[i]]$bits[2]))
+					points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
+					legend(x=xp, y=ncbits+1-gatelist[[i]]$bits[2], "M", xjust=0.5, yjust=0.5,
+							x.intersp=-0.5, y.intersp=0.1, bg="white")
+					arrows(x0=xp-0.2, x1=xp+0.2,
+							y0=ncbits+1-gatelist[[i]]$bits[2]-0.2,
+							y1=ncbits+1-gatelist[[i]]$bits[2]+0.2,
+							length=0.1)
+				}
+				ipos[gatelist[[i]]$bits[1]] <- xp + 1
+				ipos[gatelist[[i]]$bits[2]] <- xp + 1
+				if(!is.na(gatelist[[i]]$bits[3])) { ipos[gatelist[[i]]$bits[3]] <- xp + 1 }
+			}
+		}
+	}
+})
+
+#' plot.xequal
+#'
+#' equalsizes the x-coordinates of all qubits in the plot
+#'
+#' @param x qstate object
+#'
+#' @examples
+#' x <- plot.xequal(x)
+#'
+#' @return
+#' An object of S4 class 'qstate'
+#'
+#' @export
+plot.xequal <- function(x) {
+	gatelist <- x@circuit$gatelist
+	x@circuit$equaly_xcoor <- c(x@circuit$equaly_xcoor, length(gatelist) + 1)
+	return(x)
+}
