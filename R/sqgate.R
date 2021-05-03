@@ -71,10 +71,10 @@ setMethod("*", c("sqgate", "qstate"),
             circuit <- e2@circuit
             ngates <- length(circuit$gatelist)
             circuit$gatelist[[ngates+1]] <- list(type=e1@type, bits=c(e1@bit, NA, NA))
-            if(e1@type == "Rx" || e1@type == "Ry" || e1@type == "Rz" || grepl("^R[0-9]+", e1@type))
-              circuit$gatelist[[ngates+1]]$angle <- Arg(e1@M[2,2])
+            if(e1@type == "Rx"){ circuit$gatelist[[ngates+1]]$angle <- 2*atan2(Im(-1*e1@M[2,1]),Re(e1@M[2,2])) }
+            if(e1@type == "Ry"){ circuit$gatelist[[ngates+1]]$angle <- 2*atan2(Re(e1@M[2,1]),Re(e1@M[2,2])) }
+            if(e1@type == "Rz" || grepl("^R[0-9]+", e1@type)){ circuit$gatelist[[ngates+1]]$angle <- 2*Arg(e1@M[2,2]) }
             circuit$gatelist[[ngates+1]]$controlled <- FALSE
-
             result <- qstate(nbits=nbits, coefs=as.complex(res), basis=e2@basis, noise=e2@noise, circuit=circuit)
             if(e1@type == "ERR" || ! (bit %in% e2@noise$bits) || e2@noise$p < runif(1)){
               return(result)
