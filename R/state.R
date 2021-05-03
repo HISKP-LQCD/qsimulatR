@@ -143,6 +143,8 @@ qstatecoefs <- function(y) {
 #' The list \code{noise} can be generated with \code{genNoise}.
 #' @slot circuit List containing the number of non-quantum bits \code{ncbits}
 #' and a list of gates \code{gatelist} applied to the original state.
+#' Furthermore it contains a list \code{equal_xcoor} after how many gates the 
+#' x-coordinates in the plot get equalized.
 #' Filled automatically as gates are applied, required for plotting.
 #'
 #' @details
@@ -179,7 +181,7 @@ setClass("qstate",
                    coefs=c(1. + 0i, 0i),
                    basis=genComputationalBasis(1L),
                    noise=genNoise(1L),
-                   circuit=list(ncbits=0, gatelist=list())),
+                   circuit=list(ncbits=0, gatelist=list(), equal_xcoor = list()) ),
          validity=check_qstate)
 
 ## "constructor" function
@@ -188,7 +190,7 @@ qstate <- function(nbits=1L,
                    coefs=c(1+0i, rep(0i, times=2^nbits-1)),
                    basis=genComputationalBasis(nbits=nbits),
                    noise=genNoise(nbits=nbits),
-                   circuit=list(ncbits=0, gatelist=list())) {
+                   circuit=list(ncbits=0, gatelist=list(), equaly_xcoor = list()) ) {
   return(methods::new("qstate", nbits=as.integer(nbits),
                       coefs=normalise(coefs),
                       basis=as.character(basis),
