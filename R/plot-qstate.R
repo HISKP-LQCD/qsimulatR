@@ -41,13 +41,13 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             if(ngates > 0) {
               gatelist <- x@circuit$gatelist
               for(i in c(1:ngates)) {
-			          if (i %in% x@circuit$equaly_xcoor){ ipos[1:n] <- max(ipos) }
+		if (i %in% x@circuit$equaly_xcoor){ ipos[1:n] <- max(ipos) }
                 xp <-0
-				        for(j in 2:length(is.na(gatelist[[i]]$bits))){
+		for(j in 2:length(is.na(gatelist[[i]]$bits))){
                   if(!is.na(gatelist[[i]]$bits[j])) { xp <- c(xp,ipos[gatelist[[i]]$bits[j]]) }
                 }
                 xp <- max(c(ipos[gatelist[[i]]$bits[1]],xp))
-				        ipos[gatelist[[i]]$bits[1]] <- xp + 1
+		ipos[gatelist[[i]]$bits[1]] <- xp + 1
                 for(j in 2:length(is.na(gatelist[[i]]$bits))){
                   if(!is.na(gatelist[[i]]$bits[3])) { ipos[gatelist[[i]]$bits[3]] <- xp + 1 }
                 }
