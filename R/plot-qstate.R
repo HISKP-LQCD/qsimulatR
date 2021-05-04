@@ -41,31 +41,31 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             if(ngates > 0) {
               gatelist <- x@circuit$gatelist
               for(i in c(1:ngates)) {
-		if (i %in% x@circuit$equaly_xcoor){ ipos[1:n] <- max(ipos) }
-                xp <-0
-		for(j in 2:length(is.na(gatelist[[i]]$bits))){
+                if (i %in% x@circuit$equaly_xcoor){ ipos[1:n] <- max(ipos) }
+                xp <- 0
+                for(j in 2:length(is.na(gatelist[[i]]$bits))){
                   if(!is.na(gatelist[[i]]$bits[j])) { xp <- c(xp,ipos[gatelist[[i]]$bits[j]]) }
                 }
                 xp <- max(c(ipos[gatelist[[i]]$bits[1]],xp))
-		ipos[gatelist[[i]]$bits[1]] <- xp + 1
+                ipos[gatelist[[i]]$bits[1]] <- xp + 1
                 for(j in 2:length(is.na(gatelist[[i]]$bits))){
-                  if(!is.na(gatelist[[i]]$bits[3])) { ipos[gatelist[[i]]$bits[3]] <- xp + 1 }
+                  if(!is.na(gatelist[[i]]$bits[j])) { ipos[gatelist[[i]]$bits[j]] <- xp + 1 }
                 }
               }
             }
             xmax <- max(ipos)
             ## prepare empty plot
-            plot(NA, ann=FALSE, xlim=c(0,xmax+1), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+            plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
             ## plot qubit lines
             for(i in c(n:(ncbits+1))) {
-              lines(x=c(0.3, xmax+0.7), y=c(i, i))
+              lines(x=c(0.3, xmax), y=c(i, i))
               annotate_bitnames(i=n-i+1, y=i, ...)
             }
             ## plot classical bit lines
             if(ncbits > 0) {
               for(i in c(ncbits:1)) {
-                lines(x=c(0.3, xmax+0.7), y=c(i-0.025, i-0.025))
-                lines(x=c(0.3, xmax+0.7), y=c(i+0.025, i+0.025))
+                lines(x=c(0.3, xmax), y=c(i-0.025, i-0.025))
+                lines(x=c(0.3, xmax), y=c(i+0.025, i+0.025))
                 annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
               }
             }
