@@ -7,6 +7,7 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qubitnames=NULL, cbitnames=NULL)
   }
 }
 
+
 #' plot-qstate
 #'
 #' @description
@@ -16,6 +17,8 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qubitnames=NULL, cbitnames=NULL)
 #' 
 #' @param x qstate object
 #' @param y not used here
+#' @param gate_x_plot if the number of gates exeed this number multiple plots will
+#' be produced, default value 10
 #' @param ... additional parameters to be passed on
 #'
 #' @importFrom graphics plot lines points arrows legend text
@@ -31,45 +34,38 @@ annotate_bitnames <- function(i, y, cbit=FALSE, qubitnames=NULL, cbitnames=NULL)
 #' 
 #' @exportMethod plot
 setMethod("plot", signature(x = "qstate", y = "missing"),
-          function(x, y, ...) {
+          function(x, y, gate_x_plot=12 ,...) {
+            if(gate_x_plot<=0) stop("gate_x_plot must be >0")
             nbits <- x@nbits
             ncbits <- x@circuit$ncbits
             n <- nbits + ncbits
             ngates <- length(x@circuit$gatelist)
-            ## compute xlim first
-            ipos <- rep(1, times=n)
-            if(ngates > 0) {
-              gatelist <- x@circuit$gatelist
-              for(i in c(1:ngates)) {
-                if(is.na(gatelist[[i]]$bits[2])) {
-                  ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
-                }
-                else {
-                  ipos[1:n] <- max(ipos) + 1
-                }
-              }
-            }
-            xmax <- max(ipos)
-            ## prepare empty plot
-            plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
-            ## plot qubit lines
-            for(i in c(n:(ncbits+1))) {
-              lines(x=c(0.3, xmax), y=c(i, i))
-              annotate_bitnames(i=n-i+1, y=i, ...)
-            }
-            ## plot classical bit lines
-            if(ncbits > 0) {
-              for(i in c(ncbits:1)) {
-                lines(x=c(0.3, xmax), y=c(i-0.025, i-0.025))
-                lines(x=c(0.3, xmax), y=c(i+0.025, i+0.025))
-                annotate_bitnames(i=ncbits-i+1, y=i, cbit=TRUE, ...)
-              }
-            }
+            
             if(ngates > 0) {
               ipos <- rep(1, times=n)
               ## plot gates
               gatelist <- x@circuit$gatelist
               for(i in c(1:ngates)) {
+                if(max(ipos)%%gate_x_plot==1){
+                  ipos <- rep(1, times=n)
+                  xmax <- gate_x_plot
+                  ## prepare empty plot
+                  plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+                  ## plot qubit lines
+                  for(ii in c(n:(ncbits+1))) {
+                    lines(x=c(0.3, xmax), y=c(ii, ii))
+                    annotate_bitnames(i=n-ii+1, y=ii, ...)
+                  }
+                  ## plot classical bit lines
+                  if(ncbits > 0) {
+                    for(ii in c(ncbits:1)) {
+                      lines(x=c(0.3, xmax), y=c(ii-0.025, ii-0.025))
+                      lines(x=c(0.3, xmax), y=c(ii+0.025, ii+0.025))
+                      annotate_bitnames(i=ncbits-ii+1, y=ii, cbit=TRUE, ...)
+                    }
+                  }
+                }
+                
                 ## single qubit gates
                 if(is.na(gatelist[[i]]$bits[2])) {
                   type <- gatelist[[i]]$type
@@ -135,7 +131,40 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                            length=0.1)
                   }
                 }
+                
+                # draw an arrow at the bottom left corner if the plot continue
+                if(max(ipos)%%gate_x_plot==1 && i!=ngates ){
+                  text(x=xmax-1.2, y=0.1, labels="continue")
+                  arrows(x0=xmax-0.4, x1=xmax,
+                         y0=0.1,
+                         y1=0.1,
+                         length=0.1)
+                  #the newline command is required for pdf output
+                  cat("\n\n")
+                }
+                
               }
             }
+            else{
+              ##emplty plot
+              ipos <- rep(1, times=n)
+              xmax <- gate_x_plot
+              ## prepare empty plot
+              plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
+              ## plot qubit lines
+              for(ii in c(n:(ncbits+1))) {
+                lines(x=c(0.3, xmax), y=c(ii, ii))
+                annotate_bitnames(i=n-ii+1, y=ii, ...)
+              }
+              ## plot classical bit lines
+              if(ncbits > 0) {
+                for(ii in c(ncbits:1)) {
+                  lines(x=c(0.3, xmax), y=c(ii-0.025, ii-0.025))
+                  lines(x=c(0.3, xmax), y=c(ii+0.025, ii+0.025))
+                  annotate_bitnames(i=ncbits-ii+1, y=ii, cbit=TRUE, ...)
+                }
+              }
+            }
+          
           }
           )
