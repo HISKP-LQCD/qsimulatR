@@ -1,40 +1,104 @@
 ---
 title: "qsimulatR"
+subtitle: "A Quantum Simulator in R"
 author: "Johann Ostmeyer and Carsten Urbach"
+date: "20. Dec. 2020"
 output:
   rmarkdown::html_vignette
-    
+
+#  html_document:
+#    theme: readable
+#    df_print: paged
+#    toc: yes
+#    toc_depth: '2'
+#    number_sections: yes
+#    highlight: tango
+#    toc_float: yes
+#    code_folding: show
+
 vignette: >
   %\VignetteIndexEntry{qsimulatR}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
+
+link_citation: yes
+mainfont: XCharter
+bibliography: bibliography.bib
+fontsize: 12pt
+reference-section-title: References
 ---
 
 ```{r echo=FALSE}
 library(knitr)
-library(qsimulatR)
 knitr::opts_chunk$set(fig.align='center',
                       comment='')
 ```
 
+# Quantum Computing
+
+Quantum computing is attracting a lot of attention recently due to
+significant advances in constructing quantum devices. While this does
+not yet mean that large scale quantum computing is possible, it might
+be so in the future. Thus, for the time being, quantum simulators play
+an important role for inventing and testing of algorithms.
+
+Quantum computing requires a different approach to programming than
+many of us are used to on classical computers. The more or less
+standard approach is now via so-called **quantum circuits**,
+a generalisation of classical logical circuits (or better classical
+reversible circuits). The basic entity of such a circuit is a **quantum
+state** composed out of qubits. Such states can be manipulated via
+**unitary quantum gates**. Classical information can be retrieved by
+performing (projective) **measurements**.
+
+For a comprehensive introduction and discussion see [@nielsenchuan].
+
 # qsimulatR Package
 
-In this vignette we provide basic usage examples of the `qsimulatR`
-package. 
+By the nature of quantum mechanics, quantum algorithms are
+probabilistic algorithms. As such, `R` could be the natural language
+to analyse the corresponding results. The package `qsimulatR`
+presented here provides a quantum simulator which allows one to
+implement quantum circuits in `R`. `qsimulatR` uses `S4` classes to
+implement quantum state manipulations intuitively via multiplications
+`*`. 
+
+General single qubit gates and general controlled single qubit gates
+can be easily defined. For convenience, it currently directly provides
+the most common gates (X, Y, Z, H, Z, S, T, Rx, Ry, Rz, CNOT, SWAP,
+toffoli or CCNOT, CSWAP). `qsimulatR` supports plotting
+of quantum circuits.
+
+Since one important platform for real quantum devices is given by
+`qiskit`, `qsimulatR` is able to export circuits into `qiskit`.
+The such exported code can in principle be run directly
+on IBM's real quantum hardware.
+
+We have developed `qsimulatR` for a lecture on _Quantum Computing_
+taught at the University of Bonn, Germany, during winter term 2020. It
+is available on [CRAN](https://cran.r-project.org/)
+since last week. The most up-to-date version can be obtained from the
+`github` [repository](https://github.com/HISKP-LQCD/qsimulatR).
 
 ## A quantum state
 
 The basis for the simulator is a quantum state, called `qstate` in
 `qsimulatR` realised as an S4 class. One can generate a `qstate` with
-a number of qubits as follows
+a number of qubits (here 2 by `nbits=2`) as follows
 
 ```{r}
+library(qsimulatR)
 x <- qstate(nbits=2)
 x
 ```
 
 Per default this state is in the computational basis with all qubits
-in the $|0\rangle$ state. The basis state can also be supplied to
+in the $|0\rangle$ state. The convention is that the least significant
+bit is printed as the rightmost qubit, the most significant one as the
+leftmost qubit. In front of the basis state the _complex_ amplitude of
+this state is printed.
+
+The basis state can also be supplied to
 `qstate` as an optional argument, e.g.
 
 ```{r}
@@ -42,7 +106,9 @@ CatInBox <- qstate(nbits=1, basis=c("|dead>", "|alive>"))
 CatInBox
 ```
 
-and also the coefficients of the separate basis states can be set
+and also the coefficients of the separate basis states can be set,
+even though that is not realistic on a real quantum device and should
+be avoided for other than testing purposes
 
 ```{r}
 CatInBox <- qstate(nbits=1, basis=c("|dead>", "|alive>"),
@@ -50,17 +116,31 @@ CatInBox <- qstate(nbits=1, basis=c("|dead>", "|alive>"),
 CatInBox
 ```
 
-A `qstate` object can also be plotted. If no gate was applied yet,
-this is not very interesting
+Quantum circuits can be visualised very easily. Each qubit is
+represented by a horizontal line. In `qsimulatR` a circuit can be
+plotted by plotting a `qstate` object.
+If no gate was applied yet, the corresponding image is not very interesting
 
 ```{r, fig.align="center"}
-plot(x, qubitnames=c("bit1", "bit2"))
+plot(x, qubitnames=c("qubit1", "qubit2"))
 ```
 
 ## Applying single qubit gates
 
-Next one can apply single qubit quantum
-gates to such a `qstate`, like for instance the Hadamard gate
+As said above, quantum states can be manipulated via unitary
+gates. For this the `*` operator is overloaded for certain types of
+gates applied to `qstate` objects. One important gate is the so-called
+**Hadamard** gate, which has the matrix representation
+\[
+H\ =\ \frac{1}{\sqrt{2}}\begin{pmatrix}
+1 & 1 \\
+1 & -1 \\
+\end{pmatrix}\,.
+\]
+The Hadamard gate is available in `qsimulatR` as `H(j)`. Every single
+qubit gate needs to be supplied with the information `j` to which qubit it
+is to be applied to. The application to the first qubit (i.e. the
+least significant one) looks as follows:
 
 ```{r}
 x <- qstate(nbits=2)
@@ -68,10 +148,10 @@ y <- H(1) * x
 y
 ```
 
-where the argument to `H` is the qubit to which to apply the gate. in
-`R` we start counting with 1, which corresponds to the least
+In `R` we start counting with 1, which corresponds to the least
 significant bit (or the rightmost one in $|00\rangle$). `H(1)` returns
-an S4 object of class `sqgate` and the multiplication is overloaded.
+an S4 object of class `sqgate` and the multiplication with `qstate` is
+overloaded.
 
 Now, with a gate included, plotting the state represents the quantum
 circuit used to generate the state, for instance
@@ -80,9 +160,9 @@ circuit used to generate the state, for instance
 plot(y)
 ```
 
-Even if there is a list of predefined single qubit gates (`H`, `X`,
-`Z`, `Y`, `Rz`, `Id`, `S`, `Tgate`), any single qubit gate can be defined
-as follows
+Even if there is a list of predefined standard single qubit gates
+(`H`, `X`, `Z`, `Y`, `Rz`, `Ry`, `Rz`, `Id`, `S`, `Tgate`), any single
+qubit gate can be defined as follows via its matrix representation
 
 ```{r}
 myGate <- function(bit) {
@@ -100,11 +180,16 @@ z
 ```
 
 The argument `M` must be a unitary $2\times 2$ complex valued matrix,
-which in this case is the third Pauli matrix predefined as `Z`.
+which in this case is the third Pauli matrix predefined as `Z`. If `M`
+is not unitary, an error will the thrown.
 
 ### Truth Table
 
-Sometimes it is useful to look at the quantum analogon of a truth table of a gate as it immediately shows how every qubit is influenced depending on the other qubits. It can provide a consistency check for a newly implemented gate, too. The truth table of a single qubit gate (here the `X` gate) can be obtained as follows
+Sometimes it is useful to look at the quantum analogue of a truth table of a 
+gate as it immediately shows how every qubit is influenced depending on the 
+other qubits. It can provide a consistency check for a newly implemented gate, 
+too. The truth table of a single qubit gate (here the `X` gate) can be obtained 
+as follows
 
 ```{r}
 truth.table(X, 1)
@@ -112,8 +197,9 @@ truth.table(X, 1)
 
 ## Multi-qubit gates
 
-The most important two-qubit gate is the controlled `NOT` or `CNOT`
-gate. It has the truth table
+For universal quantum computing more than single qubit gates are
+necessary. The most important two-qubit gate is the controlled `NOT`
+or `CNOT` gate. It has the truth table
 
 ```{r}
 truth.table(CNOT, 2)
@@ -126,13 +212,14 @@ z <- CNOT(c(1,2)) * y
 z
 ```
 
+which is maximally entangled.
 Plotting the resulting circuit looks as follows
 
 ```{r, fig.align="center"}
 plot(z)
 ```
 
-The arguments to `CNOT` are the controll and target bit in this
+The arguments to `CNOT` are the control and target bit in this
 order. Again, arbitrary controlled single qubit gates can be generated
 as follows
 
@@ -144,10 +231,12 @@ z
 
 which in this case is the `CNOT` gate again with control bit 1 and
 target bit 2. `cqgate` is a convenience function to generate a new S4
-object of S4 class `cqgate`. Note that a similar function `sqgate` is
-available. The `gate` argument to `cqgate` can be any `sqgate` object.
+object of S4 class `cqgate`. Note that a similar function `sqgate` for
+single qubit gates is available. The `gate` argument to `cqgate` can
+be any `sqgate` object.
 
-Another widely used two-qubit gate is the `SWAP` gate
+Another widely used two-qubit gate is the `SWAP` gate, which swaps
+two qubits, in the following example the first and the second qubit:
 
 ```{r, fig.align="center"}
 z <- SWAP(c(1,2)) * y
@@ -163,7 +252,8 @@ z
 ```
 
 Finally, there are also the controlled `CNOT` or Toffoli gate and the
-controlled `SWAP` gate available
+controlled `SWAP` or Fredkin gate available. The next code snipped shows the
+application of the `CCNOT` gate.
 
 ```{r, fig.align="center"}
 x <- H(1) *(H(2) * qstate(3))
@@ -235,7 +325,96 @@ hist(rv, freq=FALSE, main="Probability for Qubit 3")
 where we read of from the wave function that the ratio should be $3:1$
 for values $0$ and $1$, which is well reproduced.
 
-# Export ot Qiskit
+## Quantum Fourier Trafo and other higher level functionality
+
+The quantum Fourier transformation (qFT) is an important building
+block of many algorithms. `qsimulatR` provides an implementation of
+qFT over $\mathbb{Z}_{2^n}$ via the `qft` function.
+
+```{r}
+y <- qstate(3)
+y <- qft(y, inverse=FALSE)
+plot(y)
+```
+
+`qft` can also apply the inverse qFT by setting
+`inverse=TRUE`. Moreover, the qFT can also be applied to a subset of
+qubits only, here to qubits two to four while the first qubit is left
+alone:
+
+```{r}
+y <- qstate(4)
+y <- qft(y, bits=c(2:4), inverse=FALSE)
+plot(y)
+```
+
+For more details we refer to the `qft` vignette. Based on the
+qFT algorithm the **phase estimation** algorithm can be defined. It is
+implemented in `qsimulatR` as the function `phase_estimation`. The
+phase estimation allows to estimate the phase of eigenvalues of unitary
+operators (all eigenvalues $\lambda=e^{2\pi i\varphi}$ of unitary
+operators $U$ have modulus 1, i.e. $|\lambda| = 1$). In order to call the
+`phase_estimation` function, a wrapper function for the unitary
+operator needs to be defined, e.g. for the `NOT` operator, which is
+the Pauli `X` matrix
+\[
+X\ =\ \begin{pmatrix}
+0 & 1 \\
+1 & 0 \\
+\end{pmatrix}
+\]
+The wrapper function then needs to implement a controlled `NOT`
+operation, i.e. the `CNOT` operator, to the power $2^j$. $X^2=1$, thus
+we can implement it as follows
+
+```{r}
+cnotwrapper <- function(c, j, x, k) {
+  if(j == 1) return(CNOT(c(c, k)) * x)
+  return(Id(k) * x)
+}
+```
+
+For the `phase_estimation` function, this wrapper function must have
+the control qubit `c` as first argument, as the second the
+integer power `j` and as the third the `qstate` object `x`. Additional 
+parameters to the wrapper function can be passed via the `...`
+argument to `phase_estimation`. 
+
+`X` has eigenvalues $\lambda_\pm=\pm1$. Thus, the corresponding
+phases are $\varphi = 0$ and $\varphi= 1/2$. Both can be represented
+as binary fractions with a single bit exactly. Here we use $t=2$ qubits
+in the call of `phase_estimation` determined by the length of the
+`bitmask` argument to the function. In addition, the phase estimation
+procedure needs a trial state. If possible, this trial state should be
+in an eigenstate of the unitary operator. However, also a random
+superposition of eigenstates works. In the example, we use the first
+qubit as the trial state, which we initialise in the state
+$(|0\rangle + |1\rangle)/\sqrt{2}$, which is an eigenstate of
+$X$ with eigenvalue $+1$. Qubits two and three are used in 
+the phase estimation function
+
+```{r}
+x <- H(1) * qstate(3)
+x <- phase_estimation(bitmask=c(2:3), FUN=cnotwrapper, x=x, k=1)
+x
+```
+
+How to interpret the result? The first qubit stays in the state
+$(|0\rangle + |1\rangle)/\sqrt{2}$, as it is an eigenstate. The other
+two qubits encode the phase $\varphi=0.00$ in binary fraction
+representation. Using the other eigenstate $(|0\rangle -
+|1\rangle)/\sqrt{2}$ leads to
+
+```{r}
+x <- H(1) * (X(1) * qstate(3))
+x <- phase_estimation(bitmask=c(2:3), FUN=cnotwrapper, x=x, k=1)
+x
+```
+
+and $\varphi=0.10 = 1/2$. More details and a more complex example can
+be found in the `qsimulatR` vignette on `phase_estimation`.
+
+# Export to Qiskit
 
 IBM provides quantum computing platforms, which can be freely
 used. However, one needs to programme in python using the `qiskit`
@@ -244,7 +423,7 @@ to `qiskit`
 
 ```{r}
 filename <- paste0(tempdir(), "/circuit.py")
-export2qiskit(y, filename=filename)
+export2qiskit(y, filename=filename, import=TRUE)
 ```
 
 which results in the following file
@@ -261,3 +440,8 @@ works for standard quantum gates, not for customary defined ones.
 ```{r, echo=FALSE, results=FALSE}
 file.remove(filename)
 ```
+
+# Outlook
+
+So far, we have not yet included any noise models in `qsimulatR`. This
+might be added in the near future. 

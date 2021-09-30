@@ -47,19 +47,24 @@ setMethod("*", c("cnotgate", "qstate"),
             stopifnot(length(e1@bits) == 2)
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
             stopifnot(e1@bits[1] != e1@bits[2])
+            bits <- e1@bits
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
-            cb <- is.bitset(al, bit=e1@bits[1])
+            cb <- is.bitset(al, bit=bits[1])
             ## target bit
-            tb <- is.bitset(al, bit=e1@bits[2])
+            tb <- is.bitset(al, bit=bits[2])
             x <- which(cb & tb)
             y <- which(cb & !tb)
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
-            e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bits=c(e1@bits, NA))
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CNOT", bits=c(bits, NA))
 
-            return(e2)
+            if(! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
+              return(e2)
+            }else{
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error, args=e2@noise$args) * e2)
+            }
           }
           )
 
@@ -117,18 +122,23 @@ setMethod("*", c("ccnotgate", "qstate"),
             stopifnot(length(e1@bits) == 3)
             stopifnot(length(e1@bits) == length(unique(e1@bits)))
             stopifnot(all(e1@bits > 0) && all(e1@bits <= e2@nbits))
+            bits <- e1@bits
             ## control bit == 1
             al <- 0:(2^e2@nbits-1)
-            cb <- is.bitset(al, bit=e1@bits[1]) & is.bitset(al, bit=e1@bits[2])
+            cb <- is.bitset(al, bit=bits[1]) & is.bitset(al, bit=bits[2])
             ## target bit
-            tb <- is.bitset(al, bit=e1@bits[3])
+            tb <- is.bitset(al, bit=bits[3])
             x <- which(cb & tb)
             y <- which(cb & !tb)
             e2@coefs[c(x,y)]  <- e2@coefs[c(y,x)]
             ## again the circuit needs extension for plotting
             ngates <- length(e2@circuit$gatelist)
-            e2@circuit$gatelist[[ngates+1]] <- list(type="CCNOT", bits=c(e1@bits))
+            e2@circuit$gatelist[[ngates+1]] <- list(type="CCNOT", bits=c(bits))
 
-            return(e2)
+            if(! any(bits %in% e2@noise$bits) || e2@noise$p < runif(1)){
+              return(e2)
+            }else{
+              return(noise(bits[bits %in% e2@noise$bits], error=e2@noise$error) * e2)
+            }
           }
           )

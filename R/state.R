@@ -93,6 +93,35 @@ genComputationalBasis <- function(nbits, collapse="") {
   return(basis)
 }
 
+#' genNoise
+#'
+#' function to generate the noise list
+#'
+#' See function \code{noise} for details.
+#'
+#' @param nbits integer. The number of qubits
+#' @param p probability with which noise is applied after every gate
+#' @param bits integer or integer array. The bit to which to apply the gate.
+#' @param error String containing the error model.
+#' @param ... Additional arguments to be stored in \code{args}.
+#'
+#' @return a list containing \code{p}, \code{bits}, \code{error} and 
+#' \code{args}
+#' 
+#' @examples
+#' genNoise(4)
+#' genNoise(2, p=1, error="small", sigma=0.1)
+#'
+#' @export
+genNoise <- function(nbits, p=0, bits=1:nbits, error="any", ...) {
+  if(missing(nbits) && missing(bits)){
+    stop("nbits or bits have to be provided!")
+  }
+  args <- list(...)
+  noise <- list(p=p, bits=bits, error=error, args=args)
+  return(noise)
+}
+
 qstatecoefs <- function(y) {
   if (methods::is(y, 'qstate')) y@coefs
   else y
@@ -107,6 +136,11 @@ qstatecoefs <- function(y) {
 #' @slot basis String or vector of strings. A single string will be interpreted 
 #' as the \code{collapse}-parameter in \code{genComputationalBasis}. A vector 
 #' of length 2^nbits yields the basis directly.
+#' @slot noise List containing the probability \code{p} some noise is applied 
+#' to one of the \code{bits} after a gate application, the model 
+#' \code{error} of this noise and further arguments \code{args} to be passed to the 
+#' function \code{noise}. See function \code{noise} for details.
+#' The list \code{noise} can be generated with \code{genNoise}.
 #' @slot circuit List containing the number of non-quantum bits \code{ncbits}
 #' and a list of gates \code{gatelist} applied to the original state.
 #' Filled automatically as gates are applied, required for plotting.
@@ -124,6 +158,12 @@ qstatecoefs <- function(y) {
 #'
 #' x <- qstate(nbits=1, coefs=as.complex(sqrt(rep(0.5, 2))), basis=c("|dead>", "|alive>"))
 #' x
+#'
+#' x <- qstate(nbits=2, noise=genNoise(nbits=2, p=1))
+#' Id(2) * x
+#' 
+#' x <- qstate(nbits=3, noise=genNoise(p=1, bits=1:2, error="small", sigma=0.1))
+#' Id(2) * x
 #' 
 #' @name qstate
 #' @rdname qstate
@@ -133,10 +173,12 @@ setClass("qstate",
          representation(nbits="integer",
                         coefs="complex",
                         basis="character",
+                        noise="list",
                         circuit="list"),
          prototype(nbits=1L,
                    coefs=c(1. + 0i, 0i),
                    basis=genComputationalBasis(1L),
+                   noise=genNoise(1L),
                    circuit=list(ncbits=0, gatelist=list())),
          validity=check_qstate)
 
@@ -145,10 +187,12 @@ setClass("qstate",
 qstate <- function(nbits=1L,
                    coefs=c(1+0i, rep(0i, times=2^nbits-1)),
                    basis=genComputationalBasis(nbits=nbits),
+                   noise=genNoise(nbits=nbits),
                    circuit=list(ncbits=0, gatelist=list())) {
   return(methods::new("qstate", nbits=as.integer(nbits),
                       coefs=normalise(coefs),
                       basis=as.character(basis),
+                      noise=noise,
                       circuit=circuit))
 }
 
