@@ -154,20 +154,22 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             }
           }
           )
-#' plot.xequal
+
+#' equalise_xcoord
 #'
 #' equalsizes the x-coordinates of all qubits in the plot
 #'
 #' @param x qstate object
 #'
 #' @examples
-#' x <- plot.xequal(x)
+#' x <- qstate(2)
+#' x <- equalise_xcoord(x)
 #'
 #' @return
 #' An object of S4 class 'qstate'
 #'
 #' @export
-plot.xequal <- function(x) {
+equalise_xcoord <- function(x) {
   gatelist <- x@circuit$gatelist
   x@circuit$equaly_xcoor <- c(x@circuit$equaly_xcoor, length(gatelist) + 1)
   return(x)
