@@ -24,7 +24,7 @@ vignette: >
 link_citation: yes
 mainfont: XCharter
 bibliography: bibliography.bib
-fontsize: 14pt
+fontsize: 12pt
 reference-section-title: References
 ---
 

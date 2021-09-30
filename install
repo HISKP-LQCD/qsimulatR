@@ -1,4 +1,4 @@
 #!/bin/bash
 
-Rscript -e "library(methods); if(!require(devtools)) install.packages('devtools', INSTALL_opts = c('--no-lock')); devtools::document()"
-R CMD INSTALL .
+Rscript --vanilla -e "library(methods); if(!require(devtools)) install.packages('devtools', INSTALL_opts = c('--no-lock')); devtools::document()"
+R --vanilla CMD INSTALL .
