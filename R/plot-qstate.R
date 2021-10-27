@@ -38,18 +38,59 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
             ngates <- length(x@circuit$gatelist)
             ## compute xlim first
             ipos <- rep(1, times=n)
+            gpos <- c(1:ngates)
             if(ngates > 0) {
               gatelist <- x@circuit$gatelist
               for(i in c(1:ngates)) {
                 if(is.na(gatelist[[i]]$bits[2])) {
+                  gpos[i] <- ipos[gatelist[[i]]$bits[1]]
                   ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
                 }
                 else {
+                  gpos[i] <- max(ipos)
                   ipos[1:n] <- max(ipos) + 1
                 }
               }
+              for(i in c(1:ngates)) {
+                ii <- which(gpos == i)
+                ni <- length(ii)
+                moved <- c()
+                if(ni > 1) {
+                  for(j in c(ni:2)) {
+                    for(k in c((j-1):1)) {
+                      if(!(j %in% moved || k %in% moved)) {
+                        ## one is a two-qubit gate
+                        if(!is.na(gatelist[[ii[j]]]$bits[2]) || is.na(gatelist[[ii[k]]]$bits[2])) {
+                          if(gatelist[[ii[j]]]$bits[1] < gatelist[[ii[k]]]$bits[1] && gatelist[[ii[k]]]$bits[1] < gatelist[[ii[j]]]$bits[2]) {
+                            gpos[gpos > i] <- gpos[gpos > i] + 1
+                            gpos[ii[j]] <- gpos[ii[j]] + 1
+                            moved <- c(moved, j)
+                          }
+                        }
+                        ## the other is a two-qubit gate
+                        else if(is.na(gatelist[[ii[j]]]$bits[2]) || !is.na(gatelist[[ii[k]]]$bits[2])) {
+                          if(gatelist[[ii[k]]]$bits[1] < gatelist[[ii[j]]]$bits[1] && gatelist[[ii[j]]]$bits[1] < gatelist[[ii[k]]]$bits[2]) {
+                            gpos[gpos > i] <- gpos[gpos > i] + 1
+                            gpos[ii[k]] <- gpos[ii[k]] + 1
+                            moved <- c(moved, k)
+                          }
+                        }
+                        ## both are two-qubit gates
+                        else if(!is.na(gatelist[[ii[j]]]$bits[2]) || !is.na(gatelist[[ii[k]]]$bits[2])) {
+                          if(any(duplicated(c(c(gatelist[[ii[j]]]$bits[1]:gatelist[[ii[j]]]$bits[2]),
+                                              c(gatelist[[ii[k]]]$bits[1]:gatelist[[ii[k]]]$bits[2]))))) {
+                            gpos[gpos > i] <- gpos[gpos > i] + 1
+                            gpos[ii[j]] <- gpos[ii[j]] + 1
+                            moved <- c(moved, j)
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
-            xmax <- max(ipos)
+            xmax <- max(gpos) + 1
             ## prepare empty plot
             plot(NA, ann=FALSE, xlim=c(0,xmax), ylim=c(0,n+1), axes=FALSE, frame.plot=FALSE)
             ## plot qubit lines
@@ -66,7 +107,6 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
               }
             }
             if(ngates > 0) {
-              ipos <- rep(1, times=n)
               ## plot gates
               gatelist <- x@circuit$gatelist
               for(i in c(1:ngates)) {
@@ -76,16 +116,14 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                   if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
                     type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                   }
-                  legend(x=ipos[gatelist[[i]]$bits[1]], y=n+1-gatelist[[i]]$bits[1],
+                  legend(x=gpos[i], y=n+1-gatelist[[i]]$bits[1],
                          type, xjust=0.5, yjust=0.5,
                          x.intersp=-0.5, y.intersp=0.1,
                          bg="white")
-                  ipos[gatelist[[i]]$bits[1]] <- ipos[gatelist[[i]]$bits[1]] + 1
                 }
                 ## multi qubit gates
                 else {
-                  xp <- max(ipos)
-                  ipos[1:n] <- xp + 1 
+                  xp <- gpos[i]
                   if(!is.null(gatelist[[i]]$controlled)) {
                     if(gatelist[[i]]$controlled) {
                       type <- gatelist[[i]]$type
