@@ -59,26 +59,30 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                   for(j in c(ni:2)) {
                     for(k in c((j-1):1)) {
                       if(!(j %in% moved || k %in% moved)) {
-                        ## one is a two-qubit gate
+                        ## one is a multi-qubit gate
                         if(!is.na(gatelist[[ii[j]]]$bits[2]) || is.na(gatelist[[ii[k]]]$bits[2])) {
-                          if(gatelist[[ii[j]]]$bits[1] < gatelist[[ii[k]]]$bits[1] && gatelist[[ii[k]]]$bits[1] < gatelist[[ii[j]]]$bits[2]) {
+                          rj <- range(gatelist[[ii[j]]]$bits, na.rm=TRUE)
+                          if(rj[1] < gatelist[[ii[k]]]$bits[1] && gatelist[[ii[k]]]$bits[1] < rj[2]) {
                             gpos[gpos > i] <- gpos[gpos > i] + 1
                             gpos[ii[j]] <- gpos[ii[j]] + 1
                             moved <- c(moved, j)
                           }
                         }
-                        ## the other is a two-qubit gate
+                        ## the other is a multi-qubit gate
                         else if(is.na(gatelist[[ii[j]]]$bits[2]) || !is.na(gatelist[[ii[k]]]$bits[2])) {
-                          if(gatelist[[ii[k]]]$bits[1] < gatelist[[ii[j]]]$bits[1] && gatelist[[ii[j]]]$bits[1] < gatelist[[ii[k]]]$bits[2]) {
+                          rk <- range(gatelist[[ii[k]]]$bits, na.rm=TRUE)
+                          if(rk[1] < gatelist[[ii[j]]]$bits[1] && gatelist[[ii[j]]]$bits[1] < rk[2]) {
                             gpos[gpos > i] <- gpos[gpos > i] + 1
                             gpos[ii[k]] <- gpos[ii[k]] + 1
                             moved <- c(moved, k)
                           }
                         }
-                        ## both are two-qubit gates
+                        ## both are multi-qubit gates
                         else if(!is.na(gatelist[[ii[j]]]$bits[2]) || !is.na(gatelist[[ii[k]]]$bits[2])) {
-                          if(any(duplicated(c(c(gatelist[[ii[j]]]$bits[1]:gatelist[[ii[j]]]$bits[2]),
-                                              c(gatelist[[ii[k]]]$bits[1]:gatelist[[ii[k]]]$bits[2]))))) {
+                          rj <- range(gatelist[[ii[j]]]$bits, na.rm=TRUE)
+                          rk <- range(gatelist[[ii[k]]]$bits, na.rm=TRUE)
+                          if(any(duplicated(c(c(rj[1]:rj[2]),
+                                              c(rk[1]:rk[2]))))) {
                             gpos[gpos > i] <- gpos[gpos > i] + 1
                             gpos[ii[j]] <- gpos[ii[j]] + 1
                             moved <- c(moved, j)
