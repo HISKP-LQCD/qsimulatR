@@ -24,6 +24,7 @@
 vignettes/*.html
 vignettes/*.pdf
 vignettes/*.tex
+vignettes/*.log
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
@@ -49,3 +50,6 @@ man
 *~
 doc
 Meta
+
+# Vim temp files
+*.swp
