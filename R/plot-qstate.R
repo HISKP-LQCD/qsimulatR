@@ -134,9 +134,14 @@ setMethod("plot", signature(x = "qstate", y = "missing"),
                       if(gatelist[[i]]$type == "Rx" || gatelist[[i]]$type == "Ry" || gatelist[[i]]$type == "Rz") {
                         type <- paste0(gatelist[[i]]$type, "(", format(gatelist[[i]]$angle, digits=3), ")") 
                       }
-                      points(x=xp, y=n+1-gatelist[[i]]$bits[1], pch=19, cex=1.5)
-                      lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[1], gatelist[[i]]$bits[2]))
-                      legend(x=xp, y=n+1-gatelist[[i]]$bits[2],
+                      ncbits <- length(gatelist[[i]]$bits) - 2
+                      for(k in 1:ncbits){
+                        pch <- 19
+                        if(!is.null(gatelist[[i]]$inverse)) if(gatelist[[i]]$inverse[k]) pch <- 1
+                        points(x=xp, y=n+1-gatelist[[i]]$bits[k], pch=pch, cex=1.5)
+                        lines(x=c(xp, xp), y=n+1-c(gatelist[[i]]$bits[k], gatelist[[i]]$bits[k+1]))
+                      }
+                      legend(x=xp, y=n+1-gatelist[[i]]$bits[ncbits+1],
                              type, xjust=0.5, yjust=0.5,
                              x.intersp=-0.5, y.intersp=0.1,
                              bg="white")
