@@ -38,6 +38,7 @@ Collate:
     'sqgate.R'
     'ccqgate.R'
     'cnotgate.R'
+    'cnqgate.R'
     'cqgate.R'
     'export2qiskit.R'
     'measure.R'
