@@ -53,3 +53,5 @@ Meta
 
 # Vim temp files
 *.swp
+/doc/
+/Meta/
