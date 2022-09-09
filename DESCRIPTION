@@ -1,5 +1,5 @@
 Package: qsimulatR
-Version: 1.0
+Version: 1.1
 Date: 2020-12-07
 Title: A Quantum Computer Simulator
 Authors@R: 
@@ -15,7 +15,8 @@ Description: A quantum computer simulator framework with up to 24 qubits. It all
     define general single qubit gates and general controlled single
     qubit gates. For convenience, it currently provides the
     most common gates (X, Y, Z, H, Z, S, T, Rx, Ry, Rz, CNOT, SWAP, Toffoli or
-    CCNOT, Fredkin or CSWAP). 'qsimulatR' supports plotting of circuits and is able to
+    CCNOT, Fredkin or CSWAP). 'qsimulatR' also implements noise models.
+    'qsimulatR' supports plotting of circuits and is able to
     export circuits to 'Qiskit' <https://qiskit.org/>, a python package
     which can be used to run on IBM's hardware <https://quantum-computing.ibm.com/>.
 Imports:
@@ -28,7 +29,7 @@ Suggests:
 License: GPL-3
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/HISKP-LQCD/qsimulatR
