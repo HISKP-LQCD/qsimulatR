@@ -6,16 +6,6 @@ date: "20. Dec. 2020"
 output:
   rmarkdown::html_vignette
 
-#  html_document:
-#    theme: readable
-#    df_print: paged
-#    toc: yes
-#    toc_depth: '2'
-#    number_sections: yes
-#    highlight: tango
-#    toc_float: yes
-#    code_folding: show
-
 vignette: >
   %\VignetteIndexEntry{qsimulatR}
   %\VignetteEngine{knitr::rmarkdown}
@@ -276,7 +266,11 @@ plot(y)
 
 ## Multi-gate circuits as functions
 
-You might want to use specific circuits of several gates more than once and therefore find it tedious to type it completely every time you use it. Defining a new gate combining all of the operations might not be as easy either. In these cases we find it convenient to define generating functions of the form
+You might want to use specific circuits of several gates more than
+once and therefore find it tedious to type it completely every time
+you use it. Defining a new gate combining all of the operations might
+not be as easy either. In these cases we find it convenient to define
+generating functions of the form 
 
 ```{r}
 myswap <- function(bits){
@@ -286,9 +280,12 @@ myswap <- function(bits){
 }
 ```
 
-where an outer function takes any required information concerning the circuit. It then returns a function that applies given circuit to a state.
+where an outer function takes any required information concerning the
+circuit. It then returns a function that applies given circuit to a
+state. 
 
-Our example above implements a `SWAP` using only `CNOT` gates as can be checked with the truth table:
+Our example above implements a `SWAP` using only `CNOT` gates as can
+be checked with the truth table: 
 
 ```{r}
 truth.table(myswap, 2)
@@ -414,6 +411,48 @@ x
 and $\varphi=0.10 = 1/2$. More details and a more complex example can
 be found in the `qsimulatR` vignette on `phase_estimation`.
 
+# Quantum Noise
+
+Current quantum hardware is noisy. `qsimulatR` offers possibilities to
+simulate such noise. First of all, there is a noisy gate with
+different noise models. With a certain probability `p` (default value
+`1`) a gate is applied to qubit `bit`, which can follow the models
+`X`, `Y`, `Z`, `small` or `any`:
+
+- `X`, `Y` or `Z` are the corresponding Pauli gates
+- in case of `small`, an almost unit gate is applied with a small
+  deviation parametrised by and additional parameter `sigma`
+  representing the standard deviation of Gaussian noise
+- `any` means an arbitrary, uniformly sampled, SU(2)-matrix is applied
+
+Examples are
+
+```{r}
+x <- noise(bit=1, error="X") * qstate(nbits=2)
+x
+y <- noise(bit=2, p=0.5) * x
+y
+z <- noise(bit=2, error="small", args=list(sigma=0.1)) * x
+z
+```
+
+This is generalised to a quantum state in `qsimulatR` by making it a
+property of a `state` as follows:
+
+```{r}
+x <- qstate(nbits=2, noise=genNoise(nbits=2, p=1, error="any"))
+```
+
+Now, a random gate is applied with every gate applied to such a
+quantum state, e.g.
+
+```{r}
+y <- Id(2) * x
+y
+```
+
+See the function `genNoise` for more details.
+
 # Export to Qiskit
 
 IBM provides quantum computing platforms, which can be freely
@@ -441,7 +480,3 @@ works for standard quantum gates, not for customary defined ones.
 file.remove(filename)
 ```
 
-# Outlook
-
-So far, we have not yet included any noise models in `qsimulatR`. This
-might be added in the near future. 
