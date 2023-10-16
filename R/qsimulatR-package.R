@@ -16,5 +16,6 @@
 #' @docType package
 #' @author Johann Ostemeyer, Carsten Urbach, \email{urbach@hiskp.uni-bonn.de}
 #'
-#' @keywords package
+#' @keywords internal
+"_PACKAGE"
 NULL

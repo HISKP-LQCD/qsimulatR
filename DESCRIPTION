@@ -1,6 +1,6 @@
 Package: qsimulatR
-Version: 1.1
-Date: 2022-09-09
+Version: 1.1.1
+Date: 2023-10-16
 Title: A Quantum Computer Simulator
 Authors@R: 
     c(person(given = "Johann",
@@ -29,7 +29,7 @@ Suggests:
 License: GPL-3
 LazyData: true
 Roxygen: list(markdown = TRUE, old_usage = TRUE, r6 = FALSE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Encoding: UTF-8
 VignetteBuilder: knitr
 URL: https://github.com/HISKP-LQCD/qsimulatR
